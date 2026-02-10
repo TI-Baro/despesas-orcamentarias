@@ -246,6 +246,20 @@ tbody tr:last-child td{border-bottom:none}
 .dropzone input[type=file]{display:none}
 .modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
 
+/* ── Import Summary ──────────────────────────────── */
+.import-summary{font-size:.8125rem;color:var(--t2)}
+.import-summary h3{font-size:.9rem;font-weight:700;color:var(--t1);margin-bottom:12px}
+.import-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.import-stat{background:var(--surface2);border-radius:8px;padding:12px;text-align:center}
+.import-stat .num{font-size:1.25rem;font-weight:700;font-family:'Cascadia Code','Consolas',monospace}
+.import-stat .num.green{color:var(--green)}.import-stat .num.amber{color:var(--amber)}.import-stat .num.red{color:var(--red)}.import-stat .num.gray{color:var(--t3)}
+.import-stat .lbl{font-size:.7rem;color:var(--t3);text-transform:uppercase;font-weight:600;letter-spacing:.04em;margin-top:2px}
+.import-months{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.import-warn{background:var(--amber-bg);color:var(--amber);padding:10px 14px;border-radius:8px;font-size:.8rem;font-weight:500;margin-top:8px;display:flex;align-items:flex-start;gap:8px}
+.import-warn svg{width:16px;height:16px;flex-shrink:0;margin-top:1px}
+.import-ok{background:var(--green-bg);color:var(--green);padding:10px 14px;border-radius:8px;font-size:.8rem;font-weight:500;margin-top:8px;display:flex;align-items:center;gap:8px}
+.import-ok svg{width:16px;height:16px;flex-shrink:0}
+
 /* ── Toast ───────────────────────────────────────── */
 .toast{
   position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
@@ -407,16 +421,29 @@ tbody tr:last-child td{border-bottom:none}
       <button class="modal-close" onclick="hideUpload()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
-      <div class="dropzone" id="dropzone">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p>Arraste o arquivo aqui ou clique para selecionar</p>
-        <span>CSV separado por ponto-e-virgula (;)</span>
-        <input type="file" id="fileInput" accept=".csv,.txt">
+      <!-- Step 1: File select -->
+      <div id="uploadStep1">
+        <div class="dropzone" id="dropzone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <p>Arraste o arquivo aqui ou clique para selecionar</p>
+          <span>CSV separado por ponto-e-virgula (;)</span>
+          <input type="file" id="fileInput" accept=".csv,.txt">
+        </div>
+      </div>
+      <!-- Step 2: Confirmation -->
+      <div id="uploadStep2" style="display:none">
+        <div id="importSummary"></div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="hideUpload()">Cancelar</button>
-      <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Selecionar arquivo</button>
+      <div id="uploadFooter1">
+        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Selecionar arquivo</button>
+      </div>
+      <div id="uploadFooter2" style="display:none">
+        <button class="btn" onclick="uploadBackToStep1()">Voltar</button>
+        <button class="btn btn-primary" id="btnConfirmImport">Confirmar importacao</button>
+      </div>
     </div>
   </div>
 </div>
@@ -500,17 +527,97 @@ function splitLine(line) {
     r.push(c); return r;
 }
 
+// ── Fingerprint (unique key per row) ─────────────
+function fingerprint(r) {
+    return `${r.mes}|${r.contaContabil}|${r.historico}|${r.orcado}|${r.real}|${r.dc}|${r.lote}`;
+}
+
 // ── Import ───────────────────────────────────────
+let pendingRows = [];
+
 async function importFile(file) {
     const text = await readFile(file);
     const rows = parseCSV(text);
     if (!rows.length) { toast('Nenhum dado encontrado no arquivo.', true); return; }
+
+    // Analyze against existing data
+    const existingFPs = new Set(allData.map(fingerprint));
+    let novos = 0, duplicados = 0;
+    rows.forEach(r => {
+        const fp = fingerprint(r);
+        if (existingFPs.has(fp)) { r._dup = true; duplicados++; }
+        else { r._dup = false; novos++; }
+    });
+
     const meses = [...new Set(rows.map(r => r.mes))].filter(Boolean);
-    allData = allData.filter(r => !meses.includes(r.mes)).concat(rows);
+    const mesesExistentes = meses.filter(m => allData.some(r => r.mes === m));
+
+    pendingRows = rows;
+    showImportSummary({ total: rows.length, novos, duplicados, meses, mesesExistentes });
+}
+
+function showImportSummary({ total, novos, duplicados, meses, mesesExistentes }) {
+    document.getElementById('uploadStep1').style.display = 'none';
+    document.getElementById('uploadStep2').style.display = '';
+    document.getElementById('uploadFooter1').style.display = 'none';
+    document.getElementById('uploadFooter2').style.display = 'flex';
+
+    const allDup = novos === 0;
+    const hasOverlap = mesesExistentes.length > 0 && novos > 0;
+
+    let html = `<div class="import-summary">
+        <h3>Resumo da importacao</h3>
+        <div class="import-stats">
+            <div class="import-stat"><div class="num">${total}</div><div class="lbl">No arquivo</div></div>
+            <div class="import-stat"><div class="num green">${novos}</div><div class="lbl">Novos</div></div>
+            <div class="import-stat"><div class="num ${duplicados > 0 ? 'amber' : 'gray'}">${duplicados}</div><div class="lbl">Ja existem</div></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--t3);margin-bottom:8px">Meses no arquivo:</div>
+        <div class="import-months">${meses.map(m => `<span class="month-pill">${esc(m)}</span>`).join('')}</div>`;
+
+    if (allDup) {
+        html += `<div class="import-warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Todos os ${total} lancamentos deste arquivo ja existem na base. Nenhum dado sera adicionado.
+        </div>`;
+        document.getElementById('btnConfirmImport').style.display = 'none';
+    } else {
+        document.getElementById('btnConfirmImport').style.display = '';
+        if (hasOverlap) {
+            html += `<div class="import-warn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                ${duplicados} lancamento(s) ja existem e serao ignorados. Apenas ${novos} novo(s) serao adicionados.
+            </div>`;
+        } else {
+            html += `<div class="import-ok">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                ${novos} lancamento(s) novo(s) serao adicionados. Nenhuma duplicidade detectada.
+            </div>`;
+        }
+    }
+    html += `</div>`;
+    document.getElementById('importSummary').innerHTML = html;
+}
+
+function confirmImport() {
+    const novos = pendingRows.filter(r => !r._dup);
+    if (!novos.length) { toast('Nenhum dado novo para importar.', true); hideUpload(); return; }
+    novos.forEach(r => { delete r._dup; });
+    allData = allData.concat(novos);
     saveStore(allData);
-    toast(`${rows.length} lancamentos importados (${meses.join(', ')})`);
+    const meses = [...new Set(novos.map(r => r.mes))].filter(Boolean);
+    toast(`${novos.length} lancamento(s) adicionado(s) (${meses.join(', ')})`);
+    pendingRows = [];
     hideUpload();
     render();
+}
+
+function uploadBackToStep1() {
+    pendingRows = [];
+    document.getElementById('uploadStep1').style.display = '';
+    document.getElementById('uploadStep2').style.display = 'none';
+    document.getElementById('uploadFooter1').style.display = '';
+    document.getElementById('uploadFooter2').style.display = 'none';
 }
 
 // ── Filter ───────────────────────────────────────
@@ -780,9 +887,10 @@ document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.addEventListener
 });
 
 // Upload
-function showUpload() { document.getElementById('uploadModal').style.display = 'flex'; }
-function hideUpload() { document.getElementById('uploadModal').style.display = 'none'; }
+function showUpload() { uploadBackToStep1(); document.getElementById('uploadModal').style.display = 'flex'; }
+function hideUpload() { pendingRows = []; document.getElementById('uploadModal').style.display = 'none'; uploadBackToStep1(); }
 document.getElementById('uploadModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideUpload(); });
+document.getElementById('btnConfirmImport').addEventListener('click', confirmImport);
 
 const dz = document.getElementById('dropzone');
 dz.addEventListener('click', () => document.getElementById('fileInput').click());
