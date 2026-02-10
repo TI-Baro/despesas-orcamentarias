@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle Orçamentário - TI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0f1a;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2332;
+            --border: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent: #3b82f6;
+            --accent-light: #60a5fa;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            font-family: 'Archivo', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%);
+            animation: drift 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(5%, 5%) rotate(180deg); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            margin-bottom: 3rem;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .upload-section:hover {
+            border-color: var(--accent);
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+        }
+
+        .upload-section.dragover {
+            border-color: var(--accent-light);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 0.875rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+        .stat-change.neutral { color: var(--text-secondary); }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            animation: fadeIn 0.6s ease-out 0.6s both;
+        }
+
+        .filter-input, .filter-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-family: 'Archivo', sans-serif;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-input:focus, .filter-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            animation: fadeIn 0.6s ease-out 0.8s both;
+        }
+
+        .tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 1rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            font-family: 'Archivo', sans-serif;
+        }
+
+        .tab:hover {
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            color: var(--accent-light);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            animation: fadeIn 0.6s ease-out 1s both;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(59, 130, 246, 0.05);
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+        }
+
+        .badge-neutral {
+            background: rgba(156, 163, 175, 0.15);
+            color: var(--text-secondary);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .progress-fill.danger {
+            background: linear-gradient(90deg, var(--danger), #dc2626);
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, var(--warning), #d97706);
+        }
+
+        .progress-fill.success {
+            background: linear-gradient(90deg, var(--success), #059669);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            opacity: 0.3;
+            margin-bottom: 1rem;
+        }
+
+        /* Currency formatting */
+        .currency {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+
+        .currency.negative {
+            color: var(--danger);
+        }
+
+        .currency.positive {
+            color: var(--success);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filter-input, .filter-select {
+                width: 100%;
+            }
+
+            table {
+                font-size: 0.875rem;
+            }
+
+            th, td {
+                padding: 0.75rem 0.5rem;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 Controle Orçamentário</h1>
+            <p class="subtitle">Sistema de Acompanhamento de Orçamento - Tecnologia da Informação</p>
+        </header>
+
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-icon">📁</div>
+            <h3 style="margin-bottom: 0.5rem;">Importar Planilha CSV</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Arraste e solte o arquivo CSV aqui ou clique para selecionar
+            </p>
+            <input type="file" id="fileInput" accept=".csv">
+            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                Selecionar Arquivo
+            </button>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">💰 Total Orçado</div>
+                    <div class="stat-value currency" id="totalOrcado">R$ 0,00</div>
+                    <div class="stat-change neutral" id="orcadoMes">Mês atual</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">✅ Total Realizado</div>
+                    <div class="stat-value currency" id="totalRealizado">R$ 0,00</div>
+                    <div class="stat-change neutral" id="percentRealizado">0% do orçado</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💸 Saldo Disponível</div>
+                    <div class="stat-value currency" id="saldo">R$ 0,00</div>
+                    <div class="stat-change neutral" id="percentSaldo">0% restante</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">🚨 Itens em Alerta</div>
+                    <div class="stat-value" id="totalAlertas">0</div>
+                    <div class="stat-change negative" id="alertasDesc">Requerem atenção</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <input type="text" class="filter-input" id="searchInput" placeholder="🔍 Buscar por descrição ou conta...">
+                <select class="filter-select" id="mesFilter">
+                    <option value="">Todos os meses</option>
+                </select>
+                <select class="filter-select" id="responsavelFilter">
+                    <option value="">Todos os responsáveis</option>
+                </select>
+                <select class="filter-select" id="statusFilter">
+                    <option value="">Todos os status</option>
+                    <option value="estourado">🔴 Estourado</option>
+                    <option value="atencao">🟡 Atenção</option>
+                    <option value="ok">🟢 OK</option>
+                    <option value="nao-iniciado">⚪ Não Iniciado</option>
+                </select>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="alertas">🚨 Alertas Críticos</button>
+                <button class="tab" data-tab="consolidado">📊 Consolidado por Conta</button>
+                <button class="tab" data-tab="lancamentos">📋 Todos os Lançamentos</button>
+                <button class="tab" data-tab="reembolsos">💸 Reembolsos</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tabContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+        let consolidatedData = [];
+
+        // Upload handling
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const buffer = e.target.result;
+                let csv;
+                try {
+                    csv = new TextDecoder('utf-8', { fatal: true }).decode(buffer);
+                } catch {
+                    csv = new TextDecoder('windows-1252').decode(buffer);
+                }
+                parseCSV(csv);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n').filter(line => line.trim());
+            const headers = lines[0].split(';').map(h => h.trim());
+            
+            rawData = lines.slice(1).map(line => {
+                const values = parseCSVLine(line);
+                const obj = {};
+                headers.forEach((header, i) => {
+                    obj[header] = values[i] || '';
+                });
+                return obj;
+            });
+
+            consolidateData();
+            renderDashboard();
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ';' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        function consolidateData() {
+            const grouped = {};
+            
+            rawData.forEach(item => {
+                const key = `${item['Conta Contábil']}-${item['Centro Custo']}-${item['MÊS']}`;
+                
+                if (!grouped[key]) {
+                    grouped[key] = {
+                        chave: key,
+                        contaContabil: item['Conta Contábil'],
+                        descricao: item['Descrição Conta'],
+                        centroCusto: item['Centro Custo'],
+                        mes: item['MÊS'],
+                        responsavel: item['Responsável'],
+                        grupoConta: item['Grupo Conta'],
+                        grupoOXR: item['Grupo OXR'],
+                        orcado: 0,
+                        realizado: 0,
+                        lancamentos: []
+                    };
+                }
+                
+                // Converter vírgula em ponto para valores decimais
+                const valorStr = item['Orçado']?.replace(',', '.') || '0';
+                const realStr = item['Real']?.replace(',', '.') || '0';
+                const valor = parseFloat(valorStr) || 0;
+                const real = parseFloat(realStr) || 0;
+                
+                grouped[key].lancamentos.push(item);
+                grouped[key].orcado += valor;
+                grouped[key].realizado += real;
+            });
+            
+            consolidatedData = Object.values(grouped).map(item => {
+                const percentExecutado = item.orcado !== 0 ? (item.realizado / item.orcado * 100) : 0;
+                const saldo = item.orcado - item.realizado;
+                
+                let status = '';
+                if (percentExecutado > 100) status = 'estourado';
+                else if (percentExecutado >= 90) status = 'atencao';
+                else if (percentExecutado > 0) status = 'ok';
+                else status = 'nao-iniciado';
+                
+                return {
+                    ...item,
+                    percentExecutado,
+                    saldo,
+                    status,
+                    isReembolso: item.orcado < 0 || item.realizado < 0
+                };
+            });
+        }
+
+        function renderDashboard() {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            updateStats();
+            populateFilters();
+            setupTabs();
+            renderTab('alertas');
+        }
+
+        function updateStats() {
+            const totals = consolidatedData.reduce((acc, item) => {
+                acc.orcado += item.orcado;
+                acc.realizado += item.realizado;
+                return acc;
+            }, { orcado: 0, realizado: 0 });
+            
+            const saldo = totals.orcado - totals.realizado;
+            const percentRealizado = totals.orcado !== 0 ? (totals.realizado / totals.orcado * 100) : 0;
+            const percentSaldo = totals.orcado !== 0 ? (saldo / totals.orcado * 100) : 0;
+            
+            const alertas = consolidatedData.filter(item => 
+                item.status === 'estourado' || item.status === 'atencao'
+            ).length;
+            
+            document.getElementById('totalOrcado').textContent = formatCurrency(totals.orcado);
+            document.getElementById('totalRealizado').textContent = formatCurrency(totals.realizado);
+            document.getElementById('saldo').textContent = formatCurrency(saldo);
+            document.getElementById('totalAlertas').textContent = alertas;
+            
+            document.getElementById('percentRealizado').textContent = `${percentRealizado.toFixed(1)}% do orçado`;
+            document.getElementById('percentSaldo').textContent = `${percentSaldo.toFixed(1)}% restante`;
+        }
+
+        function populateFilters() {
+            const meses = [...new Set(rawData.map(item => item['MÊS']))].filter(Boolean);
+            const responsaveis = [...new Set(rawData.map(item => item['Responsável']))].filter(Boolean);
+            
+            const mesFilter = document.getElementById('mesFilter');
+            meses.forEach(mes => {
+                const option = document.createElement('option');
+                option.value = mes;
+                option.textContent = mes;
+                mesFilter.appendChild(option);
+            });
+            
+            const respFilter = document.getElementById('responsavelFilter');
+            responsaveis.forEach(resp => {
+                const option = document.createElement('option');
+                option.value = resp;
+                option.textContent = resp;
+                respFilter.appendChild(option);
+            });
+            
+            // Add filter listeners
+            document.getElementById('searchInput').addEventListener('input', filterData);
+            document.getElementById('mesFilter').addEventListener('change', filterData);
+            document.getElementById('responsavelFilter').addEventListener('change', filterData);
+            document.getElementById('statusFilter').addEventListener('change', filterData);
+        }
+
+        function setupTabs() {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    renderTab(tab.dataset.tab);
+                });
+            });
+        }
+
+        function filterData() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const mes = document.getElementById('mesFilter').value;
+            const responsavel = document.getElementById('responsavelFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            
+            const filtered = consolidatedData.filter(item => {
+                const matchSearch = !search || 
+                    item.descricao.toLowerCase().includes(search) ||
+                    item.contaContabil.toLowerCase().includes(search);
+                const matchMes = !mes || item.mes === mes;
+                const matchResp = !responsavel || item.responsavel === responsavel;
+                const matchStatus = !status || item.status === status;
+                
+                return matchSearch && matchMes && matchResp && matchStatus;
+            });
+            
+            const activeTab = document.querySelector('.tab.active').dataset.tab;
+            renderTab(activeTab, filtered);
+        }
+
+        function renderTab(tab, data = consolidatedData) {
+            const container = document.getElementById('tabContent');
+            
+            switch(tab) {
+                case 'alertas':
+                    renderAlertas(container, data);
+                    break;
+                case 'consolidado':
+                    renderConsolidado(container, data);
+                    break;
+                case 'lancamentos':
+                    renderLancamentos(container, data);
+                    break;
+                case 'reembolsos':
+                    renderReembolsos(container, data);
+                    break;
+            }
+        }
+
+        function renderAlertas(container, data) {
+            const alertas = data.filter(item => 
+                item.status === 'estourado' || item.status === 'atencao'
+            ).sort((a, b) => b.percentExecutado - a.percentExecutado);
+            
+            if (alertas.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <h3>Nenhum alerta no momento</h3>
+                        <p>Todos os itens estão dentro do orçamento</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Descrição</th>
+                                <th>Conta</th>
+                                <th>Orçado</th>
+                                <th>Realizado</th>
+                                <th>% Exec.</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${alertas.map(item => `
+                                <tr>
+                                    <td>${getStatusBadge(item.status)}</td>
+                                    <td><strong>${item.descricao}</strong></td>
+                                    <td><code style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">${item.contaContabil}</code></td>
+                                    <td class="currency">${formatCurrency(item.orcado)}</td>
+                                    <td class="currency">${formatCurrency(item.realizado)}</td>
+                                    <td>
+                                        <div>${item.percentExecutado.toFixed(1)}%</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill ${item.status === 'estourado' ? 'danger' : 'warning'}" 
+                                                 style="width: ${Math.min(item.percentExecutado, 100)}%"></div>
+                                        </div>
+                                    </td>
+                                    <td class="currency ${item.saldo < 0 ? 'negative' : ''}">${formatCurrency(item.saldo)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderConsolidado(container, data) {
+            const sorted = [...data].sort((a, b) => b.orcado - a.orcado);
+            
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Descrição</th>
+                                <th>Responsável</th>
+                                <th>Mês</th>
+                                <th>Orçado</th>
+                                <th>Realizado</th>
+                                <th>% Exec.</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sorted.map(item => `
+                                <tr>
+                                    <td>${getStatusBadge(item.status)}</td>
+                                    <td><strong>${item.descricao}</strong><br><small style="color: var(--text-secondary);">${item.contaContabil}</small></td>
+                                    <td>${item.responsavel}</td>
+                                    <td>${item.mes}</td>
+                                    <td class="currency">${formatCurrency(item.orcado)}</td>
+                                    <td class="currency">${formatCurrency(item.realizado)}</td>
+                                    <td>
+                                        <div>${item.percentExecutado.toFixed(1)}%</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill ${getProgressClass(item.status)}" 
+                                                 style="width: ${Math.min(item.percentExecutado, 100)}%"></div>
+                                        </div>
+                                    </td>
+                                    <td class="currency ${item.saldo < 0 ? 'negative' : ''}">${formatCurrency(item.saldo)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderLancamentos(container, data) {
+            const lancamentos = data.flatMap(item => 
+                item.lancamentos.map(lanc => ({
+                    ...lanc,
+                    consolidado: item
+                }))
+            );
+            
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Histórico</th>
+                                <th>Lote</th>
+                                <th>Orçado</th>
+                                <th>Real</th>
+                                <th>Mês</th>
+                                <th>Responsável</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${lancamentos.map(item => {
+                                const valorOrcado = parseFloat((item['Orçado'] || '0').replace(',', '.'));
+                                const valorReal = parseFloat((item['Real'] || '0').replace(',', '.'));
+                                return `
+                                <tr>
+                                    <td><strong>${item['Descrição Conta']}</strong><br><small style="color: var(--text-secondary);">${item['Conta Contábil']}</small></td>
+                                    <td>${item['Historico']}</td>
+                                    <td><span class="badge ${item['Lote'] === 'Orçado' ? 'badge-neutral' : 'badge-success'}">${item['Lote']}</span></td>
+                                    <td class="currency ${valorOrcado < 0 ? 'negative' : ''}">${formatCurrency(valorOrcado)}</td>
+                                    <td class="currency ${valorReal < 0 ? 'negative' : ''}">${formatCurrency(valorReal)}</td>
+                                    <td>${item['MÊS']}</td>
+                                    <td>${item['Responsável']}</td>
+                                </tr>
+                            `}).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderReembolsos(container, data) {
+            const reembolsos = data.filter(item => item.isReembolso);
+            
+            if (reembolsos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💸</div>
+                        <h3>Nenhum reembolso encontrado</h3>
+                        <p>Não há valores negativos (reembolsos) nos dados importados</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Conta</th>
+                                <th>Mês</th>
+                                <th>Valor Orçado</th>
+                                <th>Valor Realizado</th>
+                                <th>Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${reembolsos.map(item => `
+                                <tr>
+                                    <td><strong>${item.descricao}</strong></td>
+                                    <td><code style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">${item.contaContabil}</code></td>
+                                    <td>${item.mes}</td>
+                                    <td class="currency negative">${formatCurrency(item.orcado)}</td>
+                                    <td class="currency negative">${formatCurrency(item.realizado)}</td>
+                                    <td class="currency">${formatCurrency(item.saldo)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'estourado': '<span class="badge badge-danger">🔴 Estourado</span>',
+                'atencao': '<span class="badge badge-warning">🟡 Atenção</span>',
+                'ok': '<span class="badge badge-success">🟢 OK</span>',
+                'nao-iniciado': '<span class="badge badge-neutral">⚪ Não Iniciado</span>'
+            };
+            return badges[status] || '';
+        }
+
+        function getProgressClass(status) {
+            if (status === 'estourado') return 'danger';
+            if (status === 'atencao') return 'warning';
+            return 'success';
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value);
+        }
+    </script>
+</body>
+</html>
