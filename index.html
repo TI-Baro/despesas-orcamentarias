@@ -284,6 +284,42 @@ tbody tr:last-child td{border-bottom:none}
   .toolbar select,.search-box{width:100%;min-width:0}
   th,td{padding:8px 10px;font-size:.75rem}
 }
+
+/* ── Form Styles ────────────────────────────────── */
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+.form-input{
+  width:100%;background:var(--surface);border:1px solid var(--border);color:var(--t1);
+  padding:9px 12px;border-radius:8px;font-size:.8125rem;font-family:inherit;transition:all .12s;
+}
+.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.form-input::placeholder{color:var(--t3)}
+textarea.form-input{resize:vertical;min-height:60px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Purple KPI Icon ────────────────────────────── */
+.kpi-icon.purple{background:var(--purple-bg);color:var(--purple)}
+
+/* ── Row Actions ────────────────────────────────── */
+.row-actions{display:flex;gap:4px;justify-content:flex-end}
+.row-actions button{
+  background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:6px;
+  color:var(--t3);transition:all .12s;display:flex;align-items:center;
+}
+.row-actions button:hover{background:var(--surface2);color:var(--t1)}
+.row-actions button.danger:hover{background:var(--red-bg);color:var(--red)}
+.row-actions button svg{width:14px;height:14px}
+
+/* ── Badge Purple ───────────────────────────────── */
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+
+/* ── Invest Section ─────────────────────────────── */
+.inv-trans-area{padding:16px 24px 16px 40px;background:var(--surface2)}
+.inv-trans-area h4{font-size:.8rem;font-weight:600;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.inv-trans-table{width:100%;border-collapse:collapse}
+.inv-trans-table td{padding:7px 12px;font-size:.75rem;color:var(--t2);border-bottom:1px solid var(--border)}
+.inv-trans-table tr:last-child td{border-bottom:none}
+.modal-wide{max-width:540px}
 </style>
 </head>
 <body>
@@ -312,6 +348,10 @@ tbody tr:last-child td{border-bottom:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h11M3 6h11M3 14h7m4 0l2 2 4-4"/></svg>
       Reembolsos
     </button>
+    <button class="nav-item" data-section="investimentos">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Investimentos
+    </button>
 
     <div class="nav-divider"></div>
     <div class="nav-label">Acoes</div>
@@ -334,6 +374,7 @@ tbody tr:last-child td{border-bottom:none}
 
   <!-- Main Content -->
   <main class="main">
+   <div id="budgetSection">
     <div class="page-header">
       <div>
         <h1>Controle Orcamentario</h1>
@@ -410,6 +451,49 @@ tbody tr:last-child td{border-bottom:none}
       </div>
       <div id="content"></div>
     </div>
+   </div><!-- /budgetSection -->
+
+   <div id="investSection" style="display:none">
+    <div class="page-header">
+      <div>
+        <h1>Investimentos TI</h1>
+        <p>Linhas de investimento e acompanhamento</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="showInvLinhaModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova Linha
+        </button>
+      </div>
+    </div>
+
+    <!-- Invest KPIs -->
+    <div class="kpi-grid" id="invKpiGrid"></div>
+
+    <!-- Invest Filters -->
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="invSearch" placeholder="Buscar investimento, responsavel...">
+      </div>
+      <select id="invFilterStatus">
+        <option value="">Todos os status</option>
+        <option value="ativo">Ativo</option>
+        <option value="concluido">Concluido</option>
+        <option value="pausado">Pausado</option>
+        <option value="cancelado">Cancelado</option>
+      </select>
+      <select id="invFilterCategoria">
+        <option value="">Todas as categorias</option>
+      </select>
+    </div>
+
+    <!-- Invest Table -->
+    <div class="card">
+      <div id="invContent"></div>
+    </div>
+   </div><!-- /investSection -->
+
   </main>
 </div>
 
@@ -448,6 +532,122 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
+<!-- Modal Linha de Investimento -->
+<div class="modal-overlay" id="invLinhaModal" style="display:none">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2 id="invLinhaModalTitle">Nova Linha de Investimento</h2>
+      <button class="modal-close" onclick="hideInvLinhaModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="invLinhaId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome *</label>
+          <input type="text" class="form-input" id="invLinhaNome" placeholder="Nome do investimento">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Categoria *</label>
+          <input type="text" class="form-input" id="invLinhaCategoria" list="invCatList" placeholder="Selecione ou digite nova...">
+          <datalist id="invCatList"></datalist>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor Orcado *</label>
+          <input type="text" class="form-input" id="invLinhaValor" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsavel *</label>
+          <input type="text" class="form-input" id="invLinhaResp" placeholder="Nome do responsavel">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descricao</label>
+        <textarea class="form-input" id="invLinhaDesc" placeholder="Descricao do investimento"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data Previsao</label>
+          <input type="date" class="form-input" id="invLinhaPrevisao">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-input" id="invLinhaStatus">
+            <option value="ativo">Ativo</option>
+            <option value="concluido">Concluido</option>
+            <option value="pausado">Pausado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observacao</label>
+        <textarea class="form-input" id="invLinhaObs" placeholder="Observacoes adicionais"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideInvLinhaModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInvLinha()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Transacao -->
+<div class="modal-overlay" id="invTransModal" style="display:none">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Nova Transacao</h2>
+      <button class="modal-close" onclick="hideInvTransModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="invTransLinhaId">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Descricao *</label>
+          <input type="text" class="form-input" id="invTransDesc" placeholder="Descricao da transacao">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor *</label>
+          <input type="text" class="form-input" id="invTransValor" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Data *</label>
+          <input type="date" class="form-input" id="invTransData">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-input" id="invTransTipo">
+            <option value="despesa">Despesa</option>
+            <option value="pagamento">Pagamento</option>
+            <option value="estorno">Estorno</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fornecedor</label>
+          <input type="text" class="form-input" id="invTransFornecedor" placeholder="Nome do fornecedor">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nota Fiscal</label>
+          <input type="text" class="form-input" id="invTransNF" placeholder="Numero da NF">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Observacao</label>
+        <textarea class="form-input" id="invTransObs" placeholder="Observacoes"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideInvTransModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveInvTrans()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
   <span id="toastMsg"></span>
@@ -463,6 +663,21 @@ function saveStore(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
 
 let allData = loadStore();
 let activeTab = 'resumo';
+
+// ── Investment Store ─────────────────────────────
+const INV_STORAGE_KEY = 'investimentos_ti_data_v1';
+const INV_DEFAULT_CATS = ['Hardware','Software','Infraestrutura','Projeto','Servico','Outro'];
+function loadInvStore() {
+    try {
+        const d = JSON.parse(localStorage.getItem(INV_STORAGE_KEY)) || {};
+        return { linhas: d.linhas || [], transacoes: d.transacoes || [], categorias: d.categorias || [...INV_DEFAULT_CATS] };
+    } catch { return { linhas:[], transacoes:[], categorias:[...INV_DEFAULT_CATS] }; }
+}
+function saveInvStore(d) { localStorage.setItem(INV_STORAGE_KEY, JSON.stringify(d)); }
+let invData = loadInvStore();
+let activeSection = 'budget';
+let editingLinhaId = null;
+let addingTransToLinhaId = null;
 
 // ── CSV ──────────────────────────────────────────
 function readFile(file) {
@@ -866,16 +1081,339 @@ function emptyHTML(msg) {
     </div>`;
 }
 
+// ── Investment Filter ────────────────────────────
+function getFilteredInv() {
+    const s = document.getElementById('invSearch').value.toLowerCase();
+    const st = document.getElementById('invFilterStatus').value;
+    const cat = document.getElementById('invFilterCategoria').value;
+    return invData.linhas.filter(l => {
+        if (st && l.status !== st) return false;
+        if (cat && l.categoria !== cat) return false;
+        if (s && !`${l.nome} ${l.descricao} ${l.responsavel} ${l.categoria}`.toLowerCase().includes(s)) return false;
+        return true;
+    });
+}
+
+// ── Investment Render ────────────────────────────
+function renderInvestimentos() {
+    renderInvKPIs();
+    renderInvFilterCategories();
+    renderInvTable();
+}
+
+function renderInvKPIs() {
+    const linhas = getFilteredInv();
+    const totalPrevisto = linhas.reduce((s, l) => s + l.valorOrcado, 0);
+    const totalRealizado = linhas.reduce((s, l) => {
+        const trans = invData.transacoes.filter(t => t.linhaId === l.id);
+        return s + trans.reduce((ts, t) => ts + (t.tipo === 'estorno' ? -t.valor : t.valor), 0);
+    }, 0);
+    const saldo = totalPrevisto - totalRealizado;
+    const ativas = linhas.filter(l => l.status === 'ativo').length;
+
+    document.getElementById('invKpiGrid').innerHTML = `
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">Total Previsto</div>
+          <div class="kpi-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        </div>
+        <div class="kpi-value mono">${fmt(totalPrevisto)}</div>
+        <div class="kpi-sub">${linhas.length} linha(s) de investimento</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">Total Realizado</div>
+          <div class="kpi-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </div>
+        <div class="kpi-value mono ${totalRealizado > totalPrevisto && totalPrevisto > 0 ? 'c-red' : ''}">${fmt(totalRealizado)}</div>
+        <div class="kpi-sub">${totalPrevisto ? fmtPct(totalRealizado / totalPrevisto * 100) : '0.0%'} executado</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">Saldo Disponivel</div>
+          <div class="kpi-icon amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+        </div>
+        <div class="kpi-value mono ${saldo < 0 ? 'c-red' : 'c-green'}">${fmt(saldo)}</div>
+        <div class="kpi-sub">${totalPrevisto ? fmtPct(saldo / totalPrevisto * 100) : '0.0%'} restante</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-top">
+          <div class="kpi-label">Linhas Ativas</div>
+          <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
+        </div>
+        <div class="kpi-value">${ativas}</div>
+        <div class="kpi-sub">de ${linhas.length} linha(s)</div>
+      </div>`;
+}
+
+function getAllInvCategories() {
+    const fromLinhas = invData.linhas.map(l => l.categoria).filter(Boolean);
+    return [...new Set([...invData.categorias, ...fromLinhas])].sort();
+}
+
+function renderInvFilterCategories() {
+    const cats = getAllInvCategories();
+    // Update filter dropdown
+    const sel = document.getElementById('invFilterCategoria');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    if (cats.includes(cur)) sel.value = cur;
+    // Update datalist in modal
+    document.getElementById('invCatList').innerHTML = cats.map(c => `<option value="${esc(c)}">`).join('');
+}
+
+function invStatusBadge(status) {
+    const map = { ativo:['Ativo','badge-green'], concluido:['Concluido','badge-blue'], pausado:['Pausado','badge-amber'], cancelado:['Cancelado','badge-gray'] };
+    const [l, c] = map[status] || ['?','badge-gray'];
+    return `<span class="badge ${c}">${l}</span>`;
+}
+
+function getLinhaRealizado(linhaId) {
+    return invData.transacoes.filter(t => t.linhaId === linhaId).reduce((s, t) => s + (t.tipo === 'estorno' ? -t.valor : t.valor), 0);
+}
+
+function renderInvTable() {
+    const linhas = getFilteredInv();
+    const el = document.getElementById('invContent');
+    if (!linhas.length) {
+        el.innerHTML = `<div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            <h3>Nenhum investimento encontrado</h3>
+            <p>Clique em "Nova Linha" para criar um investimento.</p>
+        </div>`;
+        return;
+    }
+
+    const tO = linhas.reduce((s, l) => s + l.valorOrcado, 0);
+    const tR = linhas.reduce((s, l) => s + getLinhaRealizado(l.id), 0);
+    const tS = tO - tR;
+
+    el.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr><th>Status</th><th>Investimento</th><th>Categoria</th><th>Responsavel</th><th class="text-right">Previsto</th><th class="text-right">Realizado</th><th style="min-width:100px">Execucao</th><th class="text-right">Saldo</th><th></th></tr></thead>
+        <tbody>
+        ${linhas.map((l, idx) => {
+            const real = getLinhaRealizado(l.id);
+            const saldo = l.valorOrcado - real;
+            const pct = l.valorOrcado ? real / l.valorOrcado * 100 : 0;
+            const st = l.valorOrcado === 0 ? 'vazio' : pct > 100 ? 'estourado' : pct >= 80 ? 'atencao' : pct > 0 ? 'ok' : 'pendente';
+            const trans = invData.transacoes.filter(t => t.linhaId === l.id).sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+            return `<tr class="row-toggle" data-inv-idx="${idx}">
+                <td>${invStatusBadge(l.status)}</td>
+                <td><div class="cell-main">${esc(l.nome)}</div>${l.descricao ? '<div class="cell-sub">' + esc(l.descricao) + '</div>' : ''}</td>
+                <td>${esc(l.categoria)}</td>
+                <td style="color:var(--t2)">${esc(l.responsavel)}</td>
+                <td class="text-right mono">${fmt(l.valorOrcado)}</td>
+                <td class="text-right mono">${fmt(real)}</td>
+                <td><div style="font-size:.75rem;font-weight:600;color:var(--t2)">${fmtPct(Math.abs(pct))}</div>${progBar(pct, st)}</td>
+                <td class="text-right mono ${saldo < 0 ? 'c-red' : ''}">${fmt(saldo)}</td>
+                <td class="row-actions" onclick="event.stopPropagation()">
+                    <button title="Editar" onclick="showInvLinhaModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button class="danger" title="Excluir" onclick="deleteInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+                </td>
+            </tr>
+            <tr class="row-detail" data-inv-idx="${idx}"><td colspan="9">
+                <div class="inv-trans-area">
+                    <h4>Transacoes <button class="btn btn-sm btn-primary" onclick="showInvTransModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar</button></h4>
+                    ${trans.length ? `<table class="inv-trans-table"><tbody>
+                        ${trans.map(t => `<tr>
+                            <td style="width:22%"><strong>${esc(t.descricao)}</strong></td>
+                            <td style="width:12%" class="mono ${t.tipo === 'estorno' ? 'c-green' : ''}">${t.tipo === 'estorno' ? '-' : ''}${fmt(t.valor)}</td>
+                            <td style="width:12%">${esc(t.data || '')}</td>
+                            <td style="width:10%"><span class="badge ${t.tipo === 'estorno' ? 'badge-blue' : t.tipo === 'pagamento' ? 'badge-green' : 'badge-amber'}">${esc(t.tipo)}</span></td>
+                            <td style="width:15%">${esc(t.fornecedor || '')}</td>
+                            <td style="width:12%">${t.notaFiscal ? 'NF: ' + esc(t.notaFiscal) : ''}</td>
+                            <td style="width:5%" class="row-actions">
+                                <button class="danger" title="Excluir" onclick="deleteInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                            </td>
+                        </tr>`).join('')}
+                    </tbody></table>` : '<div style="font-size:.8rem;color:var(--t3);padding:8px 0">Nenhuma transacao registrada.</div>'}
+                </div>
+            </td></tr>`;
+        }).join('')}
+        <tr class="summary-row">
+            <td colspan="4" class="text-right">Total</td>
+            <td class="text-right mono">${fmt(tO)}</td>
+            <td class="text-right mono">${fmt(tR)}</td>
+            <td style="font-size:.75rem;font-weight:700">${tO ? fmtPct(tR / tO * 100) : '0%'}</td>
+            <td class="text-right mono ${tS < 0 ? 'c-red' : ''}">${fmt(tS)}</td>
+            <td></td>
+        </tr></tbody></table></div>`;
+
+    el.querySelectorAll('.row-toggle').forEach(row => {
+        row.addEventListener('click', () => {
+            const idx = row.dataset.invIdx;
+            row.classList.toggle('open');
+            el.querySelector(`.row-detail[data-inv-idx="${idx}"]`).classList.toggle('open');
+        });
+    });
+}
+
+// ── Investment CRUD ──────────────────────────────
+function showInvLinhaModal(id) {
+    editingLinhaId = id || null;
+    const modal = document.getElementById('invLinhaModal');
+    if (id) {
+        const l = invData.linhas.find(x => x.id === id);
+        if (!l) return;
+        document.getElementById('invLinhaModalTitle').textContent = 'Editar Linha de Investimento';
+        document.getElementById('invLinhaId').value = l.id;
+        document.getElementById('invLinhaNome').value = l.nome;
+        document.getElementById('invLinhaCategoria').value = l.categoria;
+        document.getElementById('invLinhaValor').value = String(l.valorOrcado).replace('.', ',');
+        document.getElementById('invLinhaResp').value = l.responsavel;
+        document.getElementById('invLinhaDesc').value = l.descricao || '';
+        document.getElementById('invLinhaPrevisao').value = l.dataPrevisao || '';
+        document.getElementById('invLinhaStatus').value = l.status;
+        document.getElementById('invLinhaObs').value = l.observacao || '';
+    } else {
+        document.getElementById('invLinhaModalTitle').textContent = 'Nova Linha de Investimento';
+        document.getElementById('invLinhaId').value = '';
+        document.getElementById('invLinhaNome').value = '';
+        document.getElementById('invLinhaCategoria').value = '';
+        document.getElementById('invLinhaValor').value = '';
+        document.getElementById('invLinhaResp').value = '';
+        document.getElementById('invLinhaDesc').value = '';
+        document.getElementById('invLinhaPrevisao').value = '';
+        document.getElementById('invLinhaStatus').value = 'ativo';
+        document.getElementById('invLinhaObs').value = '';
+    }
+    // Populate datalist with all known categories
+    document.getElementById('invCatList').innerHTML = getAllInvCategories().map(c => `<option value="${esc(c)}">`).join('');
+    modal.style.display = 'flex';
+}
+
+function hideInvLinhaModal() {
+    document.getElementById('invLinhaModal').style.display = 'none';
+    editingLinhaId = null;
+}
+
+function saveInvLinha() {
+    const nome = document.getElementById('invLinhaNome').value.trim();
+    const categoria = document.getElementById('invLinhaCategoria').value.trim();
+    const valorStr = document.getElementById('invLinhaValor').value;
+    const responsavel = document.getElementById('invLinhaResp').value.trim();
+    if (!nome || !categoria || !valorStr || !responsavel) { toast('Preencha todos os campos obrigatorios.', true); return; }
+    // Add new category to store if it doesn't exist
+    if (!invData.categorias.includes(categoria)) invData.categorias.push(categoria);
+    const valor = parseNum(valorStr);
+    if (valor <= 0) { toast('Valor orcado deve ser maior que zero.', true); return; }
+
+    const descricao = document.getElementById('invLinhaDesc').value.trim();
+    const dataPrevisao = document.getElementById('invLinhaPrevisao').value;
+    const status = document.getElementById('invLinhaStatus').value;
+    const observacao = document.getElementById('invLinhaObs').value.trim();
+
+    if (editingLinhaId) {
+        const l = invData.linhas.find(x => x.id === editingLinhaId);
+        if (l) {
+            l.nome = nome; l.descricao = descricao; l.categoria = categoria;
+            l.responsavel = responsavel; l.valorOrcado = valor; l.status = status;
+            l.dataPrevisao = dataPrevisao; l.observacao = observacao;
+        }
+        toast('Linha atualizada');
+    } else {
+        invData.linhas.push({
+            id: crypto.randomUUID ? crypto.randomUUID() : `inv-${Date.now()}`,
+            nome, descricao, categoria, responsavel, valorOrcado: valor,
+            status, dataCriacao: new Date().toISOString().slice(0, 10),
+            dataPrevisao, observacao
+        });
+        toast('Linha criada');
+    }
+    saveInvStore(invData);
+    hideInvLinhaModal();
+    renderInvestimentos();
+}
+
+function deleteInvLinha(id) {
+    if (!confirm('Remover esta linha de investimento e todas as suas transacoes?')) return;
+    invData.linhas = invData.linhas.filter(l => l.id !== id);
+    invData.transacoes = invData.transacoes.filter(t => t.linhaId !== id);
+    saveInvStore(invData);
+    toast('Linha removida');
+    renderInvestimentos();
+}
+
+function showInvTransModal(linhaId) {
+    addingTransToLinhaId = linhaId;
+    document.getElementById('invTransLinhaId').value = linhaId;
+    document.getElementById('invTransDesc').value = '';
+    document.getElementById('invTransValor').value = '';
+    document.getElementById('invTransData').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('invTransTipo').value = 'despesa';
+    document.getElementById('invTransFornecedor').value = '';
+    document.getElementById('invTransNF').value = '';
+    document.getElementById('invTransObs').value = '';
+    document.getElementById('invTransModal').style.display = 'flex';
+}
+
+function hideInvTransModal() {
+    document.getElementById('invTransModal').style.display = 'none';
+    addingTransToLinhaId = null;
+}
+
+function saveInvTrans() {
+    const linhaId = document.getElementById('invTransLinhaId').value;
+    const descricao = document.getElementById('invTransDesc').value.trim();
+    const valorStr = document.getElementById('invTransValor').value;
+    const data = document.getElementById('invTransData').value;
+    if (!descricao || !valorStr || !data) { toast('Preencha todos os campos obrigatorios.', true); return; }
+    const valor = parseNum(valorStr);
+    if (valor <= 0) { toast('Valor deve ser maior que zero.', true); return; }
+
+    const tipo = document.getElementById('invTransTipo').value;
+    const fornecedor = document.getElementById('invTransFornecedor').value.trim();
+    const notaFiscal = document.getElementById('invTransNF').value.trim();
+    const observacao = document.getElementById('invTransObs').value.trim();
+
+    invData.transacoes.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : `trans-${Date.now()}`,
+        linhaId, descricao, valor, data, tipo, fornecedor, notaFiscal, observacao
+    });
+    saveInvStore(invData);
+    toast('Transacao adicionada');
+    hideInvTransModal();
+    renderInvestimentos();
+}
+
+function deleteInvTrans(id) {
+    if (!confirm('Remover esta transacao?')) return;
+    invData.transacoes = invData.transacoes.filter(t => t.id !== id);
+    saveInvStore(invData);
+    toast('Transacao removida');
+    renderInvestimentos();
+}
+
+// ── Section Navigation ───────────────────────────
+function setSection(section) {
+    activeSection = section;
+    document.getElementById('budgetSection').style.display = section === 'budget' ? '' : 'none';
+    document.getElementById('investSection').style.display = section === 'investimentos' ? '' : 'none';
+
+    // Update sidebar active states
+    document.querySelectorAll('.nav-item[data-tab]').forEach(t => {
+        t.classList.toggle('active', section === 'budget' && t.dataset.tab === activeTab);
+    });
+    document.querySelectorAll('.nav-item[data-section]').forEach(t => {
+        t.classList.toggle('active', t.dataset.section === section);
+    });
+
+    if (section === 'investimentos') renderInvestimentos();
+}
+
 // ── Events ───────────────────────────────────────
 // Tabs (card + sidebar)
 function setTab(tab) {
     activeTab = tab;
+    if (activeSection !== 'budget') setSection('budget');
     document.querySelectorAll('.card-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('.nav-item[data-section]').forEach(t => t.classList.remove('active'));
     renderTab();
 }
 document.querySelectorAll('.card-tab').forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
 document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.addEventListener('click', () => setTab(t.dataset.tab)));
+document.querySelectorAll('.nav-item[data-section]').forEach(t => t.addEventListener('click', () => setSection(t.dataset.section)));
 
 // Filters
 ['fSearch', 'fMes', 'fResp', 'fGrupo', 'fConta'].forEach(id => {
@@ -885,6 +1423,16 @@ document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.addEventListener
         renderKPIs(); renderTab();
     });
 });
+
+// Invest filters
+['invSearch', 'invFilterStatus', 'invFilterCategoria'].forEach(id => {
+    const ev = id === 'invSearch' ? 'input' : 'change';
+    document.getElementById(id).addEventListener(ev, () => renderInvestimentos());
+});
+
+// Invest modal close on overlay
+document.getElementById('invLinhaModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideInvLinhaModal(); });
+document.getElementById('invTransModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideInvTransModal(); });
 
 // Upload
 function showUpload() { uploadBackToStep1(); document.getElementById('uploadModal').style.display = 'flex'; }
@@ -901,8 +1449,17 @@ document.getElementById('fileInput').addEventListener('change', e => { if (e.tar
 
 // Actions
 function clearAll() {
-    if (!confirm('Remover todos os dados importados?')) return;
-    allData = []; saveStore(allData); toast('Dados removidos'); render();
+    const mesSel = document.getElementById('fMes').value;
+    if (mesSel) {
+        const count = allData.filter(r => r.mes === mesSel).length;
+        if (!count) { toast('Nenhum dado para o mes ' + mesSel + '.', true); return; }
+        if (!confirm(`Remover ${count} lancamento(s) do mes "${mesSel}"?`)) return;
+        allData = allData.filter(r => r.mes !== mesSel);
+        saveStore(allData); toast(`Dados de ${mesSel} removidos`); render();
+    } else {
+        if (!confirm('Remover TODOS os dados importados?')) return;
+        allData = []; saveStore(allData); toast('Todos os dados removidos'); render();
+    }
 }
 
 function exportCSV() {
