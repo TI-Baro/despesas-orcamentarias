@@ -1,0 +1,9 @@
+.env
+.git
+.gitignore
+.claude
+.dockerignore
+*.md
+*.sql
+*.csv
+controle-orcamento-v2.html
