@@ -6,6 +6,8 @@
 <title>Controle Orcamentario - TI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
 <style>
 /* ── Reset & Tokens ─────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -41,6 +43,50 @@ body{
 }
 .mono{font-family:'Cascadia Code','SF Mono','Consolas',monospace;font-size:.92em}
 
+/* ── Login Screen ───────────────────────────────── */
+.login-screen{
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:linear-gradient(135deg,var(--blue-bg) 0%,var(--surface) 50%,var(--purple-bg) 100%);
+}
+.login-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:40px;width:100%;max-width:400px;box-shadow:var(--shadow2);
+}
+.login-card .brand{
+  display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;
+}
+.login-card .brand .icon{
+  width:40px;height:40px;background:var(--blue);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-card .brand .icon svg{width:22px;height:22px;color:#fff}
+.login-card .brand span{font-weight:700;font-size:1.1rem;color:var(--t1)}
+.login-card h2{font-size:1.25rem;font-weight:700;text-align:center;margin-bottom:4px;color:var(--t1)}
+.login-card .subtitle{font-size:.875rem;color:var(--t3);text-align:center;margin-bottom:24px}
+.login-card .form-group{margin-bottom:16px}
+.login-card .form-label{display:block;font-size:.75rem;font-weight:600;color:var(--t2);margin-bottom:6px}
+.login-card .form-input{
+  width:100%;background:var(--surface);border:1px solid var(--border);color:var(--t1);
+  padding:10px 12px;border-radius:8px;font-size:.875rem;font-family:inherit;transition:all .12s;
+}
+.login-card .form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.login-card .btn-login{
+  width:100%;padding:10px;border-radius:8px;font-size:.875rem;font-weight:600;
+  cursor:pointer;border:none;font-family:inherit;transition:all .12s;margin-top:8px;
+}
+.login-card .btn-login.primary{background:var(--blue);color:#fff}
+.login-card .btn-login.primary:hover{background:#1d4ed8}
+.login-card .btn-login.secondary{background:var(--surface);color:var(--t2);border:1px solid var(--border);margin-top:8px}
+.login-card .btn-login.secondary:hover{background:var(--surface2)}
+.login-card .login-error{
+  background:var(--red-bg);color:var(--red);padding:8px 12px;border-radius:8px;
+  font-size:.8rem;font-weight:500;margin-bottom:12px;display:none;
+}
+.login-card .login-info{
+  background:var(--blue-bg);color:var(--blue);padding:8px 12px;border-radius:8px;
+  font-size:.8rem;font-weight:500;margin-bottom:12px;display:none;
+}
+
 /* ── Sidebar ─────────────────────────────────────── */
 .layout{display:flex;min-height:100vh}
 .sidebar{
@@ -73,6 +119,7 @@ body{
 .nav-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--t3);padding:8px 12px 4px}
 
 .sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border)}
+.user-email{font-size:.7rem;color:var(--t3);padding:0 12px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── Main ────────────────────────────────────────── */
 .main{margin-left:240px;flex:1;padding:32px 40px;max-width:1280px}
@@ -320,11 +367,47 @@ textarea.form-input{resize:vertical;min-height:60px}
 .inv-trans-table td{padding:7px 12px;font-size:.75rem;color:var(--t2);border-bottom:1px solid var(--border)}
 .inv-trans-table tr:last-child td{border-bottom:none}
 .modal-wide{max-width:540px}
+
+/* ── Loading Spinner ────────────────────────────── */
+.loading-overlay{
+  position:fixed;inset:0;background:rgba(255,255,255,.7);display:flex;
+  align-items:center;justify-content:center;z-index:300;
+}
+.spinner{
+  width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);
+  border-radius:50%;animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<div class="layout">
+<!-- ── Login Screen ──────────────────────────────── -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="brand">
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+      <span>Budget TI</span>
+    </div>
+    <h2>Bem-vindo</h2>
+    <p class="subtitle">Faca login para acessar o controle orcamentario</p>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-info" id="loginInfo"></div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="loginEmail" placeholder="seu@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-input" id="loginPassword" placeholder="Sua senha">
+    </div>
+    <button class="btn-login primary" id="btnLogin">Entrar</button>
+    <button class="btn-login secondary" id="btnRegister">Criar conta</button>
+  </div>
+</div>
+
+<!-- ── App Layout (hidden until login) ───────────── -->
+<div class="layout" id="appLayout" style="display:none">
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
@@ -365,9 +448,14 @@ textarea.form-input{resize:vertical;min-height:60px}
     </button>
 
     <div class="sidebar-footer">
+      <div class="user-email" id="userEmail"></div>
       <button class="nav-item btn-danger" onclick="clearAll()" style="color:var(--red)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
         Limpar dados
+      </button>
+      <button class="nav-item" onclick="handleLogout()" style="color:var(--t3)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
       </button>
     </div>
   </aside>
@@ -653,31 +741,168 @@ textarea.form-input{resize:vertical;min-height:60px}
   <span id="toastMsg"></span>
 </div>
 
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+</div>
+
 <script>
-// ── Store ────────────────────────────────────────
-const STORAGE_KEY = 'orcamento_ti_data_v2';
+// ── Supabase Client ─────────────────────────────
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+
+// ── Constants ───────────────────────────────────
 const MONTH_ORDER = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
-function loadStore() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
-function saveStore(d) { localStorage.setItem(STORAGE_KEY, JSON.stringify(d)); }
-
-let allData = loadStore();
-let activeTab = 'resumo';
-
-// ── Investment Store ─────────────────────────────
-const INV_STORAGE_KEY = 'investimentos_ti_data_v1';
 const INV_DEFAULT_CATS = ['Hardware','Software','Infraestrutura','Projeto','Servico','Outro'];
-function loadInvStore() {
-    try {
-        const d = JSON.parse(localStorage.getItem(INV_STORAGE_KEY)) || {};
-        return { linhas: d.linhas || [], transacoes: d.transacoes || [], categorias: d.categorias || [...INV_DEFAULT_CATS] };
-    } catch { return { linhas:[], transacoes:[], categorias:[...INV_DEFAULT_CATS] }; }
-}
-function saveInvStore(d) { localStorage.setItem(INV_STORAGE_KEY, JSON.stringify(d)); }
-let invData = loadInvStore();
+
+// ── In-memory data ──────────────────────────────
+let allData = [];
+let invData = { linhas: [], transacoes: [], categorias: [] };
+let activeTab = 'resumo';
 let activeSection = 'budget';
 let editingLinhaId = null;
 let addingTransToLinhaId = null;
+
+// ── Loading helpers ─────────────────────────────
+function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+// ── Auth ────────────────────────────────────────
+async function handleLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showLoginError('Preencha email e senha.'); return; }
+    showLoginError(''); showLoginInfo('');
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) showLoginError(error.message);
+}
+
+async function handleRegister() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { showLoginError('Preencha email e senha.'); return; }
+    if (password.length < 6) { showLoginError('A senha deve ter pelo menos 6 caracteres.'); return; }
+    showLoginError(''); showLoginInfo('');
+    const { error } = await sb.auth.signUp({ email, password });
+    if (error) { showLoginError(error.message); return; }
+    showLoginInfo('Conta criada! Verifique seu email para confirmar o cadastro.');
+}
+
+async function handleLogout() {
+    await sb.auth.signOut();
+}
+
+function showLoginError(msg) {
+    const el = document.getElementById('loginError');
+    el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+}
+function showLoginInfo(msg) {
+    const el = document.getElementById('loginInfo');
+    el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+}
+
+// Auth state listener
+sb.auth.onAuthStateChange(async (event, session) => {
+    if (session && session.user) {
+        currentUser = session.user;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appLayout').style.display = 'flex';
+        document.getElementById('userEmail').textContent = currentUser.email;
+        await bootApp();
+    } else {
+        currentUser = null;
+        allData = [];
+        invData = { linhas: [], transacoes: [], categorias: [] };
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appLayout').style.display = 'none';
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        showLoginError(''); showLoginInfo('');
+    }
+});
+
+// Login button events
+document.getElementById('btnLogin').addEventListener('click', handleLogin);
+document.getElementById('btnRegister').addEventListener('click', handleRegister);
+document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+// ── Data Layer: Load from Supabase ──────────────
+async function loadStore() {
+    const { data, error } = await sb.from('orcamento_lancamentos').select('*');
+    if (error) { toast('Erro ao carregar orcamento: ' + error.message, true); return; }
+    allData = (data || []).map(r => ({
+        id: r.id,
+        mes: r.mes || '',
+        tipo: r.tipo || '',
+        responsavel: r.responsavel || '',
+        subgrupoOXR: r.subgrupo_oxr || '',
+        grupoOXR: r.grupo_oxr || '',
+        descricaoConta: r.descricao_conta || '',
+        grupoConta: r.grupo_conta || '',
+        contaContabil: r.conta_contabil || '',
+        historico: r.historico || '',
+        centroCusto: r.centro_custo || '',
+        nomeCCusto: r.nome_ccusto || '',
+        dc: r.dc || '',
+        orcado: Number(r.orcado) || 0,
+        real: Number(r.real_valor) || 0,
+        valor: Number(r.valor) || 0,
+        valorFinal: Number(r.valor_final) || 0,
+        lote: r.lote || '',
+        origem: r.origem || '',
+        data: r.data || '',
+        estrutura: r.estrutura || ''
+    }));
+}
+
+async function loadInvStore() {
+    const [linhasRes, transRes, catsRes] = await Promise.all([
+        sb.from('investimento_linhas').select('*'),
+        sb.from('investimento_transacoes').select('*'),
+        sb.from('investimento_categorias').select('*')
+    ]);
+    if (linhasRes.error) { toast('Erro ao carregar linhas: ' + linhasRes.error.message, true); }
+    if (transRes.error) { toast('Erro ao carregar transacoes: ' + transRes.error.message, true); }
+    if (catsRes.error) { toast('Erro ao carregar categorias: ' + catsRes.error.message, true); }
+
+    invData.linhas = (linhasRes.data || []).map(r => ({
+        id: r.id,
+        nome: r.nome,
+        descricao: r.descricao || '',
+        categoria: r.categoria,
+        responsavel: r.responsavel,
+        valorOrcado: Number(r.valor_orcado) || 0,
+        status: r.status,
+        dataCriacao: r.data_criacao,
+        dataPrevisao: r.data_previsao || '',
+        observacao: r.observacao || ''
+    }));
+    invData.transacoes = (transRes.data || []).map(r => ({
+        id: r.id,
+        linhaId: r.linha_id,
+        descricao: r.descricao,
+        valor: Number(r.valor) || 0,
+        data: r.data,
+        tipo: r.tipo,
+        fornecedor: r.fornecedor || '',
+        notaFiscal: r.nota_fiscal || '',
+        observacao: r.observacao || ''
+    }));
+    const savedCats = (catsRes.data || []).map(r => r.nome);
+    invData.categorias = savedCats.length ? savedCats : [...INV_DEFAULT_CATS];
+}
+
+// ── Boot App (after login) ──────────────────────
+async function bootApp() {
+    showLoading();
+    try {
+        await Promise.all([loadStore(), loadInvStore()]);
+        render();
+    } catch (e) {
+        toast('Erro ao carregar dados: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
 
 // ── CSV ──────────────────────────────────────────
 function readFile(file) {
@@ -709,7 +934,6 @@ function parseCSV(text) {
         const o = {};
         hdr.forEach((h, j) => { o[h] = (vals[j] || '').trim(); });
         rows.push({
-            id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${i}`,
             mes:            o['M\u00CAS'] || o['MES'] || o['Mes'] || '',
             tipo:           o['Tipo'] || '',
             responsavel:    o['Respons\u00E1vel'] || o['Responsavel'] || '',
@@ -755,7 +979,6 @@ async function importFile(file) {
     const rows = parseCSV(text);
     if (!rows.length) { toast('Nenhum dado encontrado no arquivo.', true); return; }
 
-    // Analyze against existing data
     const existingFPs = new Set(allData.map(fingerprint));
     let novos = 0, duplicados = 0;
     rows.forEach(r => {
@@ -814,17 +1037,56 @@ function showImportSummary({ total, novos, duplicados, meses, mesesExistentes })
     document.getElementById('importSummary').innerHTML = html;
 }
 
-function confirmImport() {
+async function confirmImport() {
     const novos = pendingRows.filter(r => !r._dup);
     if (!novos.length) { toast('Nenhum dado novo para importar.', true); hideUpload(); return; }
-    novos.forEach(r => { delete r._dup; });
-    allData = allData.concat(novos);
-    saveStore(allData);
-    const meses = [...new Set(novos.map(r => r.mes))].filter(Boolean);
-    toast(`${novos.length} lancamento(s) adicionado(s) (${meses.join(', ')})`);
-    pendingRows = [];
-    hideUpload();
-    render();
+
+    showLoading();
+    try {
+        // Map to DB column names
+        const dbRows = novos.map(r => ({
+            user_id: currentUser.id,
+            mes: r.mes,
+            tipo: r.tipo,
+            responsavel: r.responsavel,
+            subgrupo_oxr: r.subgrupoOXR,
+            grupo_oxr: r.grupoOXR,
+            descricao_conta: r.descricaoConta,
+            grupo_conta: r.grupoConta,
+            conta_contabil: r.contaContabil,
+            historico: r.historico,
+            centro_custo: r.centroCusto,
+            nome_ccusto: r.nomeCCusto,
+            dc: r.dc,
+            orcado: r.orcado,
+            real_valor: r.real,
+            valor: r.valor,
+            valor_final: r.valorFinal,
+            lote: r.lote,
+            origem: r.origem,
+            data: r.data,
+            estrutura: r.estrutura
+        }));
+
+        // Insert in batches of 500
+        for (let i = 0; i < dbRows.length; i += 500) {
+            const batch = dbRows.slice(i, i + 500);
+            const { error } = await sb.from('orcamento_lancamentos').insert(batch);
+            if (error) { toast('Erro ao importar: ' + error.message, true); hideLoading(); return; }
+        }
+
+        // Reload from Supabase to get IDs
+        await loadStore();
+        const meses = [...new Set(novos.map(r => r.mes))].filter(Boolean);
+        toast(`${novos.length} lancamento(s) adicionado(s) (${meses.join(', ')})`);
+        pendingRows = [];
+        hideUpload();
+        render();
+    } catch (e) {
+        toast('Erro ao importar: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
 }
 
 function uploadBackToStep1() {
@@ -1153,12 +1415,10 @@ function getAllInvCategories() {
 
 function renderInvFilterCategories() {
     const cats = getAllInvCategories();
-    // Update filter dropdown
     const sel = document.getElementById('invFilterCategoria');
     const cur = sel.value;
     sel.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
     if (cats.includes(cur)) sel.value = cur;
-    // Update datalist in modal
     document.getElementById('invCatList').innerHTML = cats.map(c => `<option value="${esc(c)}">`).join('');
 }
 
@@ -1248,7 +1508,7 @@ function renderInvTable() {
     });
 }
 
-// ── Investment CRUD ──────────────────────────────
+// ── Investment CRUD (Supabase) ───────────────────
 function showInvLinhaModal(id) {
     editingLinhaId = id || null;
     const modal = document.getElementById('invLinhaModal');
@@ -1277,7 +1537,6 @@ function showInvLinhaModal(id) {
         document.getElementById('invLinhaStatus').value = 'ativo';
         document.getElementById('invLinhaObs').value = '';
     }
-    // Populate datalist with all known categories
     document.getElementById('invCatList').innerHTML = getAllInvCategories().map(c => `<option value="${esc(c)}">`).join('');
     modal.style.display = 'flex';
 }
@@ -1287,51 +1546,69 @@ function hideInvLinhaModal() {
     editingLinhaId = null;
 }
 
-function saveInvLinha() {
+async function saveInvLinha() {
     const nome = document.getElementById('invLinhaNome').value.trim();
     const categoria = document.getElementById('invLinhaCategoria').value.trim();
     const valorStr = document.getElementById('invLinhaValor').value;
     const responsavel = document.getElementById('invLinhaResp').value.trim();
     if (!nome || !categoria || !valorStr || !responsavel) { toast('Preencha todos os campos obrigatorios.', true); return; }
-    // Add new category to store if it doesn't exist
-    if (!invData.categorias.includes(categoria)) invData.categorias.push(categoria);
     const valor = parseNum(valorStr);
     if (valor <= 0) { toast('Valor orcado deve ser maior que zero.', true); return; }
 
     const descricao = document.getElementById('invLinhaDesc').value.trim();
-    const dataPrevisao = document.getElementById('invLinhaPrevisao').value;
+    const dataPrevisao = document.getElementById('invLinhaPrevisao').value || null;
     const status = document.getElementById('invLinhaStatus').value;
     const observacao = document.getElementById('invLinhaObs').value.trim();
 
-    if (editingLinhaId) {
-        const l = invData.linhas.find(x => x.id === editingLinhaId);
-        if (l) {
-            l.nome = nome; l.descricao = descricao; l.categoria = categoria;
-            l.responsavel = responsavel; l.valorOrcado = valor; l.status = status;
-            l.dataPrevisao = dataPrevisao; l.observacao = observacao;
-        }
-        toast('Linha atualizada');
-    } else {
-        invData.linhas.push({
-            id: crypto.randomUUID ? crypto.randomUUID() : `inv-${Date.now()}`,
-            nome, descricao, categoria, responsavel, valorOrcado: valor,
-            status, dataCriacao: new Date().toISOString().slice(0, 10),
-            dataPrevisao, observacao
-        });
-        toast('Linha criada');
+    // Save category if new
+    if (!invData.categorias.includes(categoria)) {
+        await sb.from('investimento_categorias').upsert(
+            { user_id: currentUser.id, nome: categoria },
+            { onConflict: 'user_id,nome' }
+        );
     }
-    saveInvStore(invData);
-    hideInvLinhaModal();
-    renderInvestimentos();
+
+    showLoading();
+    try {
+        if (editingLinhaId) {
+            const { error } = await sb.from('investimento_linhas').update({
+                nome, descricao, categoria, responsavel, valor_orcado: valor,
+                status, data_previsao: dataPrevisao, observacao
+            }).eq('id', editingLinhaId);
+            if (error) { toast('Erro ao atualizar: ' + error.message, true); hideLoading(); return; }
+            toast('Linha atualizada');
+        } else {
+            const { error } = await sb.from('investimento_linhas').insert({
+                user_id: currentUser.id, nome, descricao, categoria, responsavel,
+                valor_orcado: valor, status, data_previsao: dataPrevisao, observacao
+            });
+            if (error) { toast('Erro ao criar: ' + error.message, true); hideLoading(); return; }
+            toast('Linha criada');
+        }
+        await loadInvStore();
+        hideInvLinhaModal();
+        renderInvestimentos();
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
 }
 
-function deleteInvLinha(id) {
+async function deleteInvLinha(id) {
     if (!confirm('Remover esta linha de investimento e todas as suas transacoes?')) return;
-    invData.linhas = invData.linhas.filter(l => l.id !== id);
-    invData.transacoes = invData.transacoes.filter(t => t.linhaId !== id);
-    saveInvStore(invData);
-    toast('Linha removida');
-    renderInvestimentos();
+    showLoading();
+    try {
+        const { error } = await sb.from('investimento_linhas').delete().eq('id', id);
+        if (error) { toast('Erro ao remover: ' + error.message, true); hideLoading(); return; }
+        await loadInvStore();
+        toast('Linha removida');
+        renderInvestimentos();
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
 }
 
 function showInvTransModal(linhaId) {
@@ -1352,7 +1629,7 @@ function hideInvTransModal() {
     addingTransToLinhaId = null;
 }
 
-function saveInvTrans() {
+async function saveInvTrans() {
     const linhaId = document.getElementById('invTransLinhaId').value;
     const descricao = document.getElementById('invTransDesc').value.trim();
     const valorStr = document.getElementById('invTransValor').value;
@@ -1366,22 +1643,38 @@ function saveInvTrans() {
     const notaFiscal = document.getElementById('invTransNF').value.trim();
     const observacao = document.getElementById('invTransObs').value.trim();
 
-    invData.transacoes.push({
-        id: crypto.randomUUID ? crypto.randomUUID() : `trans-${Date.now()}`,
-        linhaId, descricao, valor, data, tipo, fornecedor, notaFiscal, observacao
-    });
-    saveInvStore(invData);
-    toast('Transacao adicionada');
-    hideInvTransModal();
-    renderInvestimentos();
+    showLoading();
+    try {
+        const { error } = await sb.from('investimento_transacoes').insert({
+            user_id: currentUser.id, linha_id: linhaId, descricao, valor, data,
+            tipo, fornecedor, nota_fiscal: notaFiscal, observacao
+        });
+        if (error) { toast('Erro ao salvar: ' + error.message, true); hideLoading(); return; }
+        await loadInvStore();
+        toast('Transacao adicionada');
+        hideInvTransModal();
+        renderInvestimentos();
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
 }
 
-function deleteInvTrans(id) {
+async function deleteInvTrans(id) {
     if (!confirm('Remover esta transacao?')) return;
-    invData.transacoes = invData.transacoes.filter(t => t.id !== id);
-    saveInvStore(invData);
-    toast('Transacao removida');
-    renderInvestimentos();
+    showLoading();
+    try {
+        const { error } = await sb.from('investimento_transacoes').delete().eq('id', id);
+        if (error) { toast('Erro ao remover: ' + error.message, true); hideLoading(); return; }
+        await loadInvStore();
+        toast('Transacao removida');
+        renderInvestimentos();
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
 }
 
 // ── Section Navigation ───────────────────────────
@@ -1390,7 +1683,6 @@ function setSection(section) {
     document.getElementById('budgetSection').style.display = section === 'budget' ? '' : 'none';
     document.getElementById('investSection').style.display = section === 'investimentos' ? '' : 'none';
 
-    // Update sidebar active states
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => {
         t.classList.toggle('active', section === 'budget' && t.dataset.tab === activeTab);
     });
@@ -1402,7 +1694,6 @@ function setSection(section) {
 }
 
 // ── Events ───────────────────────────────────────
-// Tabs (card + sidebar)
 function setTab(tab) {
     activeTab = tab;
     if (activeSection !== 'budget') setSection('budget');
@@ -1430,7 +1721,7 @@ document.querySelectorAll('.nav-item[data-section]').forEach(t => t.addEventList
     document.getElementById(id).addEventListener(ev, () => renderInvestimentos());
 });
 
-// Invest modal close on overlay
+// Modal close on overlay
 document.getElementById('invLinhaModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideInvLinhaModal(); });
 document.getElementById('invTransModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideInvTransModal(); });
 
@@ -1448,17 +1739,30 @@ dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag
 document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) importFile(e.target.files[0]); e.target.value = ''; });
 
 // Actions
-function clearAll() {
+async function clearAll() {
     const mesSel = document.getElementById('fMes').value;
-    if (mesSel) {
-        const count = allData.filter(r => r.mes === mesSel).length;
-        if (!count) { toast('Nenhum dado para o mes ' + mesSel + '.', true); return; }
-        if (!confirm(`Remover ${count} lancamento(s) do mes "${mesSel}"?`)) return;
-        allData = allData.filter(r => r.mes !== mesSel);
-        saveStore(allData); toast(`Dados de ${mesSel} removidos`); render();
-    } else {
-        if (!confirm('Remover TODOS os dados importados?')) return;
-        allData = []; saveStore(allData); toast('Todos os dados removidos'); render();
+    showLoading();
+    try {
+        if (mesSel) {
+            const count = allData.filter(r => r.mes === mesSel).length;
+            if (!count) { toast('Nenhum dado para o mes ' + mesSel + '.', true); hideLoading(); return; }
+            if (!confirm(`Remover ${count} lancamento(s) do mes "${mesSel}"?`)) { hideLoading(); return; }
+            const { error } = await sb.from('orcamento_lancamentos').delete().eq('user_id', currentUser.id).eq('mes', mesSel);
+            if (error) { toast('Erro ao remover: ' + error.message, true); hideLoading(); return; }
+            await loadStore();
+            toast(`Dados de ${mesSel} removidos`);
+        } else {
+            if (!confirm('Remover TODOS os dados importados?')) { hideLoading(); return; }
+            const { error } = await sb.from('orcamento_lancamentos').delete().eq('user_id', currentUser.id);
+            if (error) { toast('Erro ao remover: ' + error.message, true); hideLoading(); return; }
+            await loadStore();
+            toast('Todos os dados removidos');
+        }
+        render();
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
     }
 }
 
@@ -1481,10 +1785,6 @@ function toast(msg, isError) {
     clearTimeout(el._t);
     el._t = setTimeout(() => el.className = 'toast', 3000);
 }
-
-// ── Boot ─────────────────────────────────────────
-render();
-if (!allData.length) showUpload();
 </script>
 </body>
 </html>
