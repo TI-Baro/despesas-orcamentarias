@@ -46,7 +46,7 @@ body{
 /* ── Login Screen ───────────────────────────────── */
 .login-screen{
   display:flex;align-items:center;justify-content:center;min-height:100vh;
-  background:linear-gradient(135deg,var(--blue-bg) 0%,var(--surface) 50%,var(--purple-bg) 100%);
+  background:linear-gradient(135deg,#e6f0e9 0%,var(--surface) 50%,#e6f0e9 100%);
 }
 .login-card{
   background:var(--surface);border:1px solid var(--border);border-radius:16px;
@@ -56,7 +56,7 @@ body{
   display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;
 }
 .login-card .brand .icon{
-  width:40px;height:40px;background:var(--blue);border-radius:10px;
+  width:40px;height:40px;background:#004518;border-radius:10px;
   display:flex;align-items:center;justify-content:center;
 }
 .login-card .brand .icon svg{width:22px;height:22px;color:#fff}
@@ -69,13 +69,13 @@ body{
   width:100%;background:var(--surface);border:1px solid var(--border);color:var(--t1);
   padding:10px 12px;border-radius:8px;font-size:.875rem;font-family:inherit;transition:all .12s;
 }
-.login-card .form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.login-card .form-input:focus{outline:none;border-color:#004518;box-shadow:0 0 0 3px rgba(0,69,24,.12)}
 .login-card .btn-login{
   width:100%;padding:10px;border-radius:8px;font-size:.875rem;font-weight:600;
   cursor:pointer;border:none;font-family:inherit;transition:all .12s;margin-top:8px;
 }
-.login-card .btn-login.primary{background:var(--blue);color:#fff}
-.login-card .btn-login.primary:hover{background:#1d4ed8}
+.login-card .btn-login.primary{background:#004518;color:#fff}
+.login-card .btn-login.primary:hover{background:#003311}
 .login-card .btn-login.secondary{background:var(--surface);color:var(--t2);border:1px solid var(--border);margin-top:8px}
 .login-card .btn-login.secondary:hover{background:var(--surface2)}
 .login-card .login-error{
@@ -83,7 +83,7 @@ body{
   font-size:.8rem;font-weight:500;margin-bottom:12px;display:none;
 }
 .login-card .login-info{
-  background:var(--blue-bg);color:var(--blue);padding:8px 12px;border-radius:8px;
+  background:#e6f0e9;color:#004518;padding:8px 12px;border-radius:8px;
   font-size:.8rem;font-weight:500;margin-bottom:12px;display:none;
 }
 
