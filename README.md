@@ -82,35 +82,31 @@ docker compose ps
 
 ## Atualizando a aplicacao em producao
 
-### Alteracoes no codigo (`index.html`)
-
-1. Faca as alteracoes necessarias no `index.html`
-2. Reconstrua e reinicie o container:
+Apos fazer alteracoes e enviar para o repositorio (`git push`), acesse a VPS e execute:
 
 ```bash
+cd /caminho/do/projeto
+git pull
 docker compose up -d --build
 ```
 
-O `--build` forca a reconstrucao da imagem com o arquivo atualizado. O container antigo e substituido automaticamente.
+- `git pull` sincroniza o codigo da VPS com o repositorio remoto
+- `docker compose up -d --build` reconstroi a imagem e reinicia o container com os arquivos atualizados
 
-### Alteracoes no `config.js`
+### Quando o `config.js` e alterado
 
-O `config.js` e copiado para dentro da imagem Docker durante o build. Por isso, ao alterar credenciais, emails permitidos ou qualquer configuracao nesse arquivo, tambem e necessario reconstruir a imagem:
+O `config.js` e copiado para dentro da imagem Docker durante o build. Por isso, ao alterar credenciais, emails permitidos ou qualquer configuracao nesse arquivo, o procedimento e o mesmo: `git pull` + rebuild.
 
-```bash
-docker compose up -d --build
-```
-
-> **Importante:** apenas editar o `config.js` no servidor nao surte efeito, pois o nginx serve a copia que esta dentro da imagem Docker. Sempre execute o rebuild apos alterar o `config.js`.
+> **Importante:** apenas editar o `config.js` direto no servidor nao surte efeito, pois o nginx serve a copia que esta dentro da imagem Docker. Sempre execute o rebuild.
 
 ### Resumo rapido
 
-| O que mudou | Comando necessario |
+| O que mudou | Comando na VPS |
 |---|---|
-| `index.html` | `docker compose up -d --build` |
-| `config.js` | `docker compose up -d --build` |
-| `docker-compose.yml` | `docker compose up -d` |
-| `nginx.conf` | `docker compose up -d --build` |
+| `index.html` | `git pull && docker compose up -d --build` |
+| `config.js` | `git pull && docker compose up -d --build` |
+| `docker-compose.yml` | `git pull && docker compose up -d` |
+| `nginx.conf` | `git pull && docker compose up -d --build` |
 
 ## Estrutura de arquivos
 
