@@ -452,6 +452,10 @@ tr.row-provisorio:hover>td{background:#ede9fe}
 
     <div class="nav-divider"></div>
     <div class="nav-label">Acoes</div>
+    <button class="nav-item" onclick="showNovoLancamentoModal()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Novo Lancamento
+    </button>
     <button class="nav-item" onclick="showUpload()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Importar CSV
@@ -488,9 +492,13 @@ tr.row-provisorio:hover>td{background:#ede9fe}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar
         </button>
-        <button class="btn btn-primary" onclick="showUpload()">
+        <button class="btn" onclick="showUpload()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Importar CSV
+        </button>
+        <button class="btn btn-primary" onclick="showNovoLancamentoModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Lancamento
         </button>
       </div>
     </div>
@@ -593,6 +601,11 @@ tr.row-provisorio:hover>td{background:#ede9fe}
       <select id="invFilterCategoria">
         <option value="">Todas as categorias</option>
       </select>
+      <select id="invFilterProv">
+        <option value="">Todos os status prov.</option>
+        <option value="provisorio">Provisorios</option>
+        <option value="validado">Validados</option>
+      </select>
     </div>
 
     <!-- Invest Table -->
@@ -639,6 +652,78 @@ tr.row-provisorio:hover>td{background:#ede9fe}
         <button class="btn" onclick="uploadBackToStep1()">Voltar</button>
         <button class="btn btn-primary" id="btnConfirmImport">Confirmar importacao</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Novo Lancamento (custeio manual) -->
+<div class="modal-overlay" id="novoLancamentoModal" style="display:none">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Novo Lancamento</h2>
+      <button class="modal-close" onclick="hideNovoLancamentoModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mes *</label>
+          <select class="form-input" id="nlMes"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Responsavel *</label>
+          <input type="text" class="form-input" id="nlResponsavel" placeholder="Nome do responsavel">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descricao da Conta *</label>
+        <input type="text" class="form-input" id="nlDescricao" placeholder="Descricao da conta">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Valor Orcado *</label>
+          <input type="text" class="form-input" id="nlOrcado" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor Real</label>
+          <input type="text" class="form-input" id="nlReal" placeholder="0,00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Conta Contabil</label>
+          <input type="text" class="form-input" id="nlContaContabil" placeholder="Ex: 6210101">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Grupo OXR</label>
+          <input type="text" class="form-input" id="nlGrupoOXR" placeholder="Grupo OXR">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Grupo Conta</label>
+          <input type="text" class="form-input" id="nlGrupoConta" placeholder="Grupo da conta">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Centro de Custo</label>
+          <input type="text" class="form-input" id="nlCentroCusto" placeholder="Centro de custo">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Historico</label>
+        <input type="text" class="form-input" id="nlHistorico" placeholder="Historico do lancamento">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Lote</label>
+        <input type="text" class="form-input" id="nlLote" placeholder="Manual" value="Manual">
+      </div>
+      <label class="prov-check">
+        <input type="checkbox" id="nlProvisorio">
+        Marcar como provisorio (pendente de validacao)
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideNovoLancamentoModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNovoLancamento()">Salvar</button>
     </div>
   </div>
 </div>
@@ -696,6 +781,10 @@ tr.row-provisorio:hover>td{background:#ede9fe}
         <label class="form-label">Observacao</label>
         <textarea class="form-input" id="invLinhaObs" placeholder="Observacoes adicionais"></textarea>
       </div>
+      <label class="prov-check">
+        <input type="checkbox" id="invLinhaProvisorio">
+        Marcar como provisorio (pendente de validacao)
+      </label>
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="hideInvLinhaModal()">Cancelar</button>
@@ -903,7 +992,8 @@ async function loadInvStore() {
         status: r.status,
         dataCriacao: r.data_criacao,
         dataPrevisao: r.data_previsao || '',
-        observacao: r.observacao || ''
+        observacao: r.observacao || '',
+        provisorio: !!r.provisorio
     }));
     invData.transacoes = (transRes.data || []).map(r => ({
         id: r.id,
@@ -1391,9 +1481,12 @@ function getFilteredInv() {
     const s = document.getElementById('invSearch').value.toLowerCase();
     const st = document.getElementById('invFilterStatus').value;
     const cat = document.getElementById('invFilterCategoria').value;
+    const prov = document.getElementById('invFilterProv').value;
     return invData.linhas.filter(l => {
         if (st && l.status !== st) return false;
         if (cat && l.categoria !== cat) return false;
+        if (prov === 'provisorio' && !l.provisorio) return false;
+        if (prov === 'validado' && l.provisorio) return false;
         if (s && !`${l.nome} ${l.descricao} ${l.responsavel} ${l.categoria}`.toLowerCase().includes(s)) return false;
         return true;
     });
@@ -1415,6 +1508,7 @@ function renderInvKPIs() {
     }, 0);
     const saldo = totalPrevisto - totalRealizado;
     const ativas = linhas.filter(l => l.status === 'ativo').length;
+    const provCount = linhas.filter(l => l.provisorio).length;
 
     document.getElementById('invKpiGrid').innerHTML = `
       <div class="kpi">
@@ -1447,7 +1541,7 @@ function renderInvKPIs() {
           <div class="kpi-icon purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></div>
         </div>
         <div class="kpi-value">${ativas}</div>
-        <div class="kpi-sub">de ${linhas.length} linha(s)</div>
+        <div class="kpi-sub">de ${linhas.length} linha(s)${provCount ? ' | ' + provCount + ' provisorio(s)' : ''}</div>
       </div>`;
 }
 
@@ -1490,8 +1584,13 @@ function renderInvTable() {
     const tO = linhas.reduce((s, l) => s + l.valorOrcado, 0);
     const tR = linhas.reduce((s, l) => s + getLinhaRealizado(l.id), 0);
     const tS = tO - tR;
+    const invProvCount = linhas.filter(l => l.provisorio).length;
+    const invProvHeader = invProvCount ? `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+        <span style="font-size:.8rem;color:var(--purple);font-weight:600">${invProvCount} linha(s) provisoria(s)</span>
+        <button class="btn-validar" onclick="validarTodosInv()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar todos</button>
+    </div>` : '';
 
-    el.innerHTML = `<div class="table-wrap"><table>
+    el.innerHTML = invProvHeader + `<div class="table-wrap"><table>
         <thead><tr><th>Status</th><th>Investimento</th><th>Categoria</th><th>Responsavel</th><th class="text-right">Previsto</th><th class="text-right">Realizado</th><th style="min-width:100px">Execucao</th><th class="text-right">Saldo</th><th></th></tr></thead>
         <tbody>
         ${linhas.map((l, idx) => {
@@ -1500,9 +1599,9 @@ function renderInvTable() {
             const pct = l.valorOrcado ? real / l.valorOrcado * 100 : 0;
             const st = l.valorOrcado === 0 ? 'vazio' : pct > 100 ? 'estourado' : pct >= 80 ? 'atencao' : pct > 0 ? 'ok' : 'pendente';
             const trans = invData.transacoes.filter(t => t.linhaId === l.id).sort((a, b) => (a.data || '').localeCompare(b.data || ''));
-            return `<tr class="row-toggle" data-inv-idx="${idx}">
+            return `<tr class="row-toggle${l.provisorio ? ' row-provisorio' : ''}" data-inv-idx="${idx}">
                 <td>${invStatusBadge(l.status)}</td>
-                <td><div class="cell-main">${esc(l.nome)}</div>${l.descricao ? '<div class="cell-sub">' + esc(l.descricao) + '</div>' : ''}</td>
+                <td><div class="cell-main">${esc(l.nome)}${l.provisorio ? ' <span class="badge badge-purple">Prov.</span>' : ''}</div>${l.descricao ? '<div class="cell-sub">' + esc(l.descricao) + '</div>' : ''}</td>
                 <td>${esc(l.categoria)}</td>
                 <td style="color:var(--t2)">${esc(l.responsavel)}</td>
                 <td class="text-right mono">${fmt(l.valorOrcado)}</td>
@@ -1510,6 +1609,7 @@ function renderInvTable() {
                 <td><div style="font-size:.75rem;font-weight:600;color:var(--t2)">${fmtPct(Math.abs(pct))}</div>${progBar(pct, st)}</td>
                 <td class="text-right mono ${saldo < 0 ? 'c-red' : ''}">${fmt(saldo)}</td>
                 <td class="row-actions" onclick="event.stopPropagation()">
+                    ${l.provisorio ? `<button class="btn-validar" title="Validar" onclick="validarInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}
                     <button title="Editar" onclick="showInvLinhaModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
                     <button class="danger" title="Excluir" onclick="deleteInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
                 </td>
@@ -1568,6 +1668,7 @@ function showInvLinhaModal(id) {
         document.getElementById('invLinhaPrevisao').value = l.dataPrevisao || '';
         document.getElementById('invLinhaStatus').value = l.status;
         document.getElementById('invLinhaObs').value = l.observacao || '';
+        document.getElementById('invLinhaProvisorio').checked = !!l.provisorio;
     } else {
         document.getElementById('invLinhaModalTitle').textContent = 'Nova Linha de Investimento';
         document.getElementById('invLinhaId').value = '';
@@ -1579,6 +1680,7 @@ function showInvLinhaModal(id) {
         document.getElementById('invLinhaPrevisao').value = '';
         document.getElementById('invLinhaStatus').value = 'ativo';
         document.getElementById('invLinhaObs').value = '';
+        document.getElementById('invLinhaProvisorio').checked = false;
     }
     document.getElementById('invCatList').innerHTML = getAllInvCategories().map(c => `<option value="${esc(c)}">`).join('');
     modal.style.display = 'flex';
@@ -1602,6 +1704,7 @@ async function saveInvLinha() {
     const dataPrevisao = document.getElementById('invLinhaPrevisao').value || null;
     const status = document.getElementById('invLinhaStatus').value;
     const observacao = document.getElementById('invLinhaObs').value.trim();
+    const provisorio = document.getElementById('invLinhaProvisorio').checked;
 
     // Save category if new
     if (!invData.categorias.includes(categoria)) {
@@ -1616,14 +1719,14 @@ async function saveInvLinha() {
         if (editingLinhaId) {
             const { error } = await sb.from('investimento_linhas').update({
                 nome, descricao, categoria, responsavel, valor_orcado: valor,
-                status, data_previsao: dataPrevisao, observacao
+                status, data_previsao: dataPrevisao, observacao, provisorio
             }).eq('id', editingLinhaId);
             if (error) { toast('Erro ao atualizar: ' + error.message, true); hideLoading(); return; }
             toast('Linha atualizada');
         } else {
             const { error } = await sb.from('investimento_linhas').insert({
                 user_id: currentUser.id, nome, descricao, categoria, responsavel,
-                valor_orcado: valor, status, data_previsao: dataPrevisao, observacao
+                valor_orcado: valor, status, data_previsao: dataPrevisao, observacao, provisorio
             });
             if (error) { toast('Erro ao criar: ' + error.message, true); hideLoading(); return; }
             toast('Linha criada');
@@ -1759,7 +1862,7 @@ document.querySelectorAll('.nav-item[data-section]').forEach(t => t.addEventList
 });
 
 // Invest filters
-['invSearch', 'invFilterStatus', 'invFilterCategoria'].forEach(id => {
+['invSearch', 'invFilterStatus', 'invFilterCategoria', 'invFilterProv'].forEach(id => {
     const ev = id === 'invSearch' ? 'input' : 'change';
     document.getElementById(id).addEventListener(ev, () => renderInvestimentos());
 });
@@ -1767,6 +1870,7 @@ document.querySelectorAll('.nav-item[data-section]').forEach(t => t.addEventList
 // Modal close on overlay
 document.getElementById('invLinhaModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideInvLinhaModal(); });
 document.getElementById('invTransModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideInvTransModal(); });
+document.getElementById('novoLancamentoModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideNovoLancamentoModal(); });
 
 // Upload
 function showUpload() { uploadBackToStep1(); document.getElementById('uploadModal').style.display = 'flex'; }
@@ -1852,6 +1956,99 @@ function exportCSV() {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `orcamento_ti_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click(); URL.revokeObjectURL(a.href); toast('Arquivo exportado');
+}
+
+// ── Novo Lancamento Manual (custeio) ────────────
+function showNovoLancamentoModal() {
+    const sel = document.getElementById('nlMes');
+    sel.innerHTML = MONTH_ORDER.map(m => `<option value="${m}">${m}</option>`).join('');
+    document.getElementById('nlResponsavel').value = '';
+    document.getElementById('nlDescricao').value = '';
+    document.getElementById('nlOrcado').value = '';
+    document.getElementById('nlReal').value = '';
+    document.getElementById('nlContaContabil').value = '';
+    document.getElementById('nlGrupoOXR').value = '';
+    document.getElementById('nlGrupoConta').value = '';
+    document.getElementById('nlCentroCusto').value = '';
+    document.getElementById('nlHistorico').value = '';
+    document.getElementById('nlLote').value = 'Manual';
+    document.getElementById('nlProvisorio').checked = false;
+    document.getElementById('novoLancamentoModal').style.display = 'flex';
+}
+
+function hideNovoLancamentoModal() {
+    document.getElementById('novoLancamentoModal').style.display = 'none';
+}
+
+async function saveNovoLancamento() {
+    const mes = document.getElementById('nlMes').value;
+    const responsavel = document.getElementById('nlResponsavel').value.trim();
+    const descricao = document.getElementById('nlDescricao').value.trim();
+    const orcadoStr = document.getElementById('nlOrcado').value;
+    if (!mes || !responsavel || !descricao || !orcadoStr) { toast('Preencha todos os campos obrigatorios.', true); return; }
+    const orcado = parseNum(orcadoStr);
+    const realVal = parseNum(document.getElementById('nlReal').value);
+    const contaContabil = document.getElementById('nlContaContabil').value.trim();
+    const grupoOXR = document.getElementById('nlGrupoOXR').value.trim();
+    const grupoConta = document.getElementById('nlGrupoConta').value.trim();
+    const centroCusto = document.getElementById('nlCentroCusto').value.trim();
+    const historico = document.getElementById('nlHistorico').value.trim();
+    const lote = document.getElementById('nlLote').value.trim() || 'Manual';
+    const provisorio = document.getElementById('nlProvisorio').checked;
+
+    showLoading();
+    try {
+        const { error } = await sb.from('orcamento_lancamentos').insert({
+            user_id: currentUser.id,
+            mes, responsavel, descricao_conta: descricao, orcado,
+            real_valor: realVal, conta_contabil: contaContabil,
+            grupo_oxr: grupoOXR, grupo_conta: grupoConta,
+            centro_custo: centroCusto, historico, lote, provisorio
+        });
+        if (error) { toast('Erro ao salvar: ' + error.message, true); hideLoading(); return; }
+        await loadStore();
+        hideNovoLancamentoModal();
+        render();
+        toast('Lancamento adicionado');
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
+
+// ── Validar provisorios investimento ────────────
+async function validarInvLinha(id) {
+    showLoading();
+    try {
+        const { error } = await sb.from('investimento_linhas').update({ provisorio: false }).eq('id', id);
+        if (error) { toast('Erro ao validar: ' + error.message, true); return; }
+        await loadInvStore();
+        renderInvestimentos();
+        toast('Linha validada');
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function validarTodosInv() {
+    const provIds = getFilteredInv().filter(l => l.provisorio).map(l => l.id);
+    if (!provIds.length) { toast('Nenhuma linha provisoria.', true); return; }
+    if (!confirm(`Validar ${provIds.length} linha(s) provisoria(s)?`)) return;
+    showLoading();
+    try {
+        const { error } = await sb.from('investimento_linhas').update({ provisorio: false }).in('id', provIds);
+        if (error) { toast('Erro ao validar: ' + error.message, true); return; }
+        await loadInvStore();
+        renderInvestimentos();
+        toast(`${provIds.length} linha(s) validada(s)`);
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
 }
 
 function toast(msg, isError) {
