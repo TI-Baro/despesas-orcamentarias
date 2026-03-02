@@ -371,6 +371,13 @@ tr.row-provisorio:hover>td{background:#ede9fe}
 }
 .btn-validar:hover{background:var(--purple);color:#fff}
 .btn-validar svg{width:12px;height:12px}
+.btn-novo-detalhe{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;
+  font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--primary);
+  background:var(--primary-bg);color:var(--primary);font-family:inherit;transition:all .12s;
+}
+.btn-novo-detalhe:hover{background:var(--primary);color:#fff}
+.btn-novo-detalhe svg{width:12px;height:12px}
 .prov-check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.8125rem;color:var(--t2);cursor:pointer}
 .prov-check input{accent-color:var(--purple);width:16px;height:16px;cursor:pointer}
 
@@ -671,12 +678,14 @@ tr.row-provisorio:hover>td{background:#ede9fe}
         </div>
         <div class="form-group">
           <label class="form-label">Responsavel *</label>
-          <input type="text" class="form-input" id="nlResponsavel" placeholder="Nome do responsavel">
+          <input type="text" class="form-input" id="nlResponsavel" list="nlResponsavelList" placeholder="Nome do responsavel">
+          <datalist id="nlResponsavelList"></datalist>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Descricao da Conta *</label>
-        <input type="text" class="form-input" id="nlDescricao" placeholder="Descricao da conta">
+        <input type="text" class="form-input" id="nlDescricao" list="nlDescricaoList" placeholder="Descricao da conta">
+        <datalist id="nlDescricaoList"></datalist>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -691,21 +700,25 @@ tr.row-provisorio:hover>td{background:#ede9fe}
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Conta Contabil</label>
-          <input type="text" class="form-input" id="nlContaContabil" placeholder="Ex: 6210101">
+          <input type="text" class="form-input" id="nlContaContabil" list="nlContaContabilList" placeholder="Ex: 6210101">
+          <datalist id="nlContaContabilList"></datalist>
         </div>
         <div class="form-group">
           <label class="form-label">Grupo OXR</label>
-          <input type="text" class="form-input" id="nlGrupoOXR" placeholder="Grupo OXR">
+          <input type="text" class="form-input" id="nlGrupoOXR" list="nlGrupoOXRList" placeholder="Grupo OXR">
+          <datalist id="nlGrupoOXRList"></datalist>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Grupo Conta</label>
-          <input type="text" class="form-input" id="nlGrupoConta" placeholder="Grupo da conta">
+          <input type="text" class="form-input" id="nlGrupoConta" list="nlGrupoContaList" placeholder="Grupo da conta">
+          <datalist id="nlGrupoContaList"></datalist>
         </div>
         <div class="form-group">
           <label class="form-label">Centro de Custo</label>
-          <input type="text" class="form-input" id="nlCentroCusto" placeholder="Centro de custo">
+          <input type="text" class="form-input" id="nlCentroCusto" list="nlCentroCustoList" placeholder="Centro de custo">
+          <datalist id="nlCentroCustoList"></datalist>
         </div>
       </div>
       <div class="form-group">
@@ -870,6 +883,7 @@ const INV_DEFAULT_CATS = ['Hardware','Software','Infraestrutura','Projeto','Serv
 
 // ── In-memory data ──────────────────────────────
 let allData = [];
+let resumoItems = [];
 let invData = { linhas: [], transacoes: [], categorias: [] };
 let activeTab = 'resumo';
 let activeSection = 'budget';
@@ -1352,6 +1366,7 @@ function renderTab() {
 
 function renderResumo(el, data) {
     const items = consolidateByConta(data).sort((a, b) => b.orcado - a.orcado);
+    resumoItems = items;
     if (!items.length) { el.innerHTML = emptyHTML(); return; }
     const tO = items.reduce((s, i) => s + i.orcado, 0), tR = items.reduce((s, i) => s + i.real, 0), tS = tO - tR;
     el.innerHTML = `<div class="table-wrap"><table>
@@ -1377,6 +1392,9 @@ function renderResumo(el, data) {
                 <td style="width:12%"><span class="dl">Centro Custo</span><br>${esc(l.centroCusto)}</td>
                 <td style="width:11%">${l.provisorio ? `<button class="btn-validar" onclick="event.stopPropagation();validarEntry('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
             </tr>`).join('')}
+            <tr><td colspan="6" style="text-align:right;padding-top:10px">
+                <button class="btn-novo-detalhe" onclick="event.stopPropagation();novoLancamentoFromResumo(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo Lancamento</button>
+            </td></tr>
             </tbody></table>
         </td></tr>`; }).join('')}
         <tr class="summary-row">
@@ -1959,7 +1977,22 @@ function exportCSV() {
 }
 
 // ── Novo Lancamento Manual (custeio) ────────────
-function showNovoLancamentoModal() {
+function populateNlDatalists() {
+    const fields = [
+        { id: 'nlResponsavelList', key: 'responsavel' },
+        { id: 'nlDescricaoList', key: 'descricaoConta' },
+        { id: 'nlContaContabilList', key: 'contaContabil' },
+        { id: 'nlGrupoOXRList', key: 'grupoOXR' },
+        { id: 'nlGrupoContaList', key: 'grupoConta' },
+        { id: 'nlCentroCustoList', key: 'centroCusto' }
+    ];
+    fields.forEach(f => {
+        const vals = [...new Set(allData.map(r => r[f.key]).filter(v => v))].sort();
+        document.getElementById(f.id).innerHTML = vals.map(v => `<option value="${esc(v)}">`).join('');
+    });
+}
+
+function showNovoLancamentoModal(prefill) {
     const sel = document.getElementById('nlMes');
     sel.innerHTML = MONTH_ORDER.map(m => `<option value="${m}">${m}</option>`).join('');
     document.getElementById('nlResponsavel').value = '';
@@ -1973,11 +2006,35 @@ function showNovoLancamentoModal() {
     document.getElementById('nlHistorico').value = '';
     document.getElementById('nlLote').value = 'Manual';
     document.getElementById('nlProvisorio').checked = false;
+    if (prefill) {
+        if (prefill.mes) sel.value = prefill.mes;
+        if (prefill.responsavel) document.getElementById('nlResponsavel').value = prefill.responsavel;
+        if (prefill.descricaoConta) document.getElementById('nlDescricao').value = prefill.descricaoConta;
+        if (prefill.contaContabil) document.getElementById('nlContaContabil').value = prefill.contaContabil;
+        if (prefill.grupoOXR) document.getElementById('nlGrupoOXR').value = prefill.grupoOXR;
+        if (prefill.grupoConta) document.getElementById('nlGrupoConta').value = prefill.grupoConta;
+        if (prefill.centroCusto) document.getElementById('nlCentroCusto').value = prefill.centroCusto;
+    }
+    populateNlDatalists();
     document.getElementById('novoLancamentoModal').style.display = 'flex';
 }
 
 function hideNovoLancamentoModal() {
     document.getElementById('novoLancamentoModal').style.display = 'none';
+}
+
+function novoLancamentoFromResumo(idx) {
+    const item = resumoItems[idx];
+    if (!item) return;
+    showNovoLancamentoModal({
+        mes: item.mes,
+        responsavel: item.responsavel,
+        descricaoConta: item.descricaoConta,
+        contaContabil: item.contaContabil,
+        grupoOXR: item.grupoOXR,
+        grupoConta: item.grupoConta,
+        centroCusto: item.itens[0] ? item.itens[0].centroCusto : ''
+    });
 }
 
 async function saveNovoLancamento() {
