@@ -28,6 +28,8 @@
   --red-bg: #fef2f2;
   --purple: #7c3aed;
   --purple-bg:#f5f3ff;
+  --primary:  #004518;
+  --primary-bg:#e6f0e9;
   --radius: 10px;
   --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   --shadow2:0 4px 12px rgba(0,0,0,.08);
@@ -54,7 +56,7 @@ body{
   display:flex;align-items:center;gap:12px;margin-bottom:32px;justify-content:center;
 }
 .login-card .brand .icon{
-  width:40px;height:40px;background:#004518;border-radius:10px;
+  width:40px;height:40px;background:var(--primary);border-radius:10px;
   display:flex;align-items:center;justify-content:center;
 }
 .login-card .brand .icon img{width:22px;height:22px;object-fit:contain}
@@ -67,12 +69,12 @@ body{
   width:100%;background:var(--surface);border:1px solid var(--border);color:var(--t1);
   padding:10px 12px;border-radius:8px;font-size:.875rem;font-family:inherit;transition:all .12s;
 }
-.login-card .form-input:focus{outline:none;border-color:#004518;box-shadow:0 0 0 3px rgba(0,69,24,.12)}
+.login-card .form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,69,24,.12)}
 .login-card .btn-login{
   width:100%;padding:10px;border-radius:8px;font-size:.875rem;font-weight:600;
   cursor:pointer;border:none;font-family:inherit;transition:all .12s;margin-top:8px;
 }
-.login-card .btn-login.primary{background:#004518;color:#fff}
+.login-card .btn-login.primary{background:var(--primary);color:#fff}
 .login-card .btn-login.primary:hover{background:#003311}
 .login-card .btn-login.secondary{background:var(--surface);color:var(--t2);border:1px solid var(--border);margin-top:8px}
 .login-card .btn-login.secondary:hover{background:var(--surface2)}
@@ -81,7 +83,7 @@ body{
   font-size:.8rem;font-weight:500;margin-bottom:12px;display:none;
 }
 .login-card .login-info{
-  background:#e6f0e9;color:#004518;padding:8px 12px;border-radius:8px;
+  background:var(--primary-bg);color:var(--primary);padding:8px 12px;border-radius:8px;
   font-size:.8rem;font-weight:500;margin-bottom:12px;display:none;
 }
 
@@ -96,7 +98,7 @@ body{
   display:flex;align-items:center;gap:10px;padding:4px 8px;margin-bottom:20px;
 }
 .sidebar-brand .icon{
-  width:32px;height:32px;background:var(--blue);border-radius:8px;
+  width:32px;height:32px;background:var(--primary);border-radius:8px;
   display:flex;align-items:center;justify-content:center;
 }
 .sidebar-brand .icon img{width:18px;height:18px;object-fit:contain}
@@ -109,7 +111,7 @@ body{
   transition:all .12s;
 }
 .nav-item:hover{background:var(--surface2);color:var(--t1)}
-.nav-item.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.nav-item.active{background:var(--primary-bg);color:var(--primary);font-weight:600}
 .nav-item svg{width:18px;height:18px;flex-shrink:0;opacity:.55}
 .nav-item.active svg{opacity:1}
 
@@ -141,8 +143,8 @@ body{
 }
 .btn:hover{background:var(--surface2);border-color:var(--border2)}
 .btn svg{width:16px;height:16px}
-.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
-.btn-primary:hover{background:#1d4ed8;border-color:#1d4ed8}
+.btn-primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn-primary:hover{background:#003311;border-color:#003311}
 .btn-ghost{background:transparent;border-color:transparent;color:var(--t2)}
 .btn-ghost:hover{background:var(--surface2);color:var(--t1)}
 .btn-danger{color:var(--red);border-color:transparent;background:transparent}
@@ -179,14 +181,14 @@ body{
   width:100%;background:var(--surface);border:1px solid var(--border);color:var(--t1);
   padding:8px 12px 8px 36px;border-radius:8px;font-size:.8125rem;font-family:inherit;transition:all .12s;
 }
-.search-box input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.search-box input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,69,24,.12)}
 .search-box input::placeholder{color:var(--t3)}
 .toolbar select{
   background:var(--surface);border:1px solid var(--border);color:var(--t1);
   padding:8px 12px;border-radius:8px;font-size:.8125rem;font-family:inherit;
   cursor:pointer;min-width:160px;transition:all .12s;
 }
-.toolbar select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.toolbar select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,69,24,.12)}
 
 /* ── Card Container / Tabs ───────────────────────── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
@@ -197,7 +199,7 @@ body{
   border-bottom:2px solid transparent;margin-bottom:-1px;
 }
 .card-tab:hover{color:var(--t2)}
-.card-tab.active{color:var(--blue);border-bottom-color:var(--blue);background:var(--surface)}
+.card-tab.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--surface)}
 
 /* ── Table ───────────────────────────────────────── */
 .table-wrap{overflow-x:auto}
@@ -240,7 +242,7 @@ tbody tr:last-child td{border-bottom:none}
 
 /* ── Expandable Rows ─────────────────────────────── */
 .row-toggle{cursor:pointer}
-.row-toggle:hover{background:var(--blue-bg)}
+.row-toggle:hover{background:var(--primary-bg)}
 .row-toggle td:first-child{position:relative;padding-left:28px}
 .row-toggle td:first-child::before{
   content:'';position:absolute;left:12px;top:50%;transform:translateY(-50%);
@@ -283,9 +285,9 @@ tbody tr:last-child td{border-bottom:none}
   border:1.5px dashed var(--border2);border-radius:var(--radius);padding:40px 24px;
   text-align:center;cursor:pointer;transition:all .15s;background:var(--surface2);
 }
-.dropzone:hover,.dropzone.dragover{border-color:var(--blue);background:var(--blue-bg)}
+.dropzone:hover,.dropzone.dragover{border-color:var(--primary);background:var(--primary-bg)}
 .dropzone svg{width:32px;height:32px;color:var(--t3);margin-bottom:12px}
-.dropzone.dragover svg{color:var(--blue)}
+.dropzone.dragover svg{color:var(--primary)}
 .dropzone p{font-size:.875rem;color:var(--t2);margin-bottom:4px}
 .dropzone span{font-size:.75rem;color:var(--t3)}
 .dropzone input[type=file]{display:none}
@@ -337,7 +339,7 @@ tbody tr:last-child td{border-bottom:none}
   width:100%;background:var(--surface);border:1px solid var(--border);color:var(--t1);
   padding:9px 12px;border-radius:8px;font-size:.8125rem;font-family:inherit;transition:all .12s;
 }
-.form-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+.form-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,69,24,.12)}
 .form-input::placeholder{color:var(--t3)}
 textarea.form-input{resize:vertical;min-height:60px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -358,6 +360,20 @@ textarea.form-input{resize:vertical;min-height:60px}
 /* ── Badge Purple ───────────────────────────────── */
 .badge-purple{background:var(--purple-bg);color:var(--purple)}
 
+/* ── Provisorio (provisional entries) ──────────── */
+tr.row-provisorio>td{background:var(--purple-bg)}
+tr.row-provisorio:hover>td{background:#ede9fe}
+.detail-table tr.row-provisorio>td{background:#ede9fe}
+.btn-validar{
+  display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;
+  font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--purple);
+  background:var(--purple-bg);color:var(--purple);font-family:inherit;transition:all .12s;
+}
+.btn-validar:hover{background:var(--purple);color:#fff}
+.btn-validar svg{width:12px;height:12px}
+.prov-check{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:.8125rem;color:var(--t2);cursor:pointer}
+.prov-check input{accent-color:var(--purple);width:16px;height:16px;cursor:pointer}
+
 /* ── Invest Section ─────────────────────────────── */
 .inv-trans-area{padding:16px 24px 16px 40px;background:var(--surface2)}
 .inv-trans-area h4{font-size:.8rem;font-weight:600;color:var(--t2);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
@@ -372,7 +388,7 @@ textarea.form-input{resize:vertical;min-height:60px}
   align-items:center;justify-content:center;z-index:300;
 }
 .spinner{
-  width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--blue);
+  width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--primary);
   border-radius:50%;animation:spin .6s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -525,6 +541,11 @@ textarea.form-input{resize:vertical;min-height:60px}
       <select id="fResp"><option value="">Todos os responsaveis</option></select>
       <select id="fGrupo"><option value="">Todos os grupos</option></select>
       <select id="fConta"><option value="">Todas as contas</option></select>
+      <select id="fProv">
+        <option value="">Todos os status</option>
+        <option value="provisorio">Provisorios</option>
+        <option value="validado">Validados</option>
+      </select>
     </div>
 
     <!-- Content Card -->
@@ -603,6 +624,10 @@ textarea.form-input{resize:vertical;min-height:60px}
       <!-- Step 2: Confirmation -->
       <div id="uploadStep2" style="display:none">
         <div id="importSummary"></div>
+        <label class="prov-check">
+          <input type="checkbox" id="chkProvisorio">
+          Marcar como provisorio (pendente de validacao)
+        </label>
       </div>
     </div>
     <div class="modal-footer">
@@ -853,7 +878,8 @@ async function loadStore() {
         lote: r.lote || '',
         origem: r.origem || '',
         data: r.data || '',
-        estrutura: r.estrutura || ''
+        estrutura: r.estrutura || '',
+        provisorio: !!r.provisorio
     }));
 }
 
@@ -1044,6 +1070,8 @@ async function confirmImport() {
     const novos = pendingRows.filter(r => !r._dup);
     if (!novos.length) { toast('Nenhum dado novo para importar.', true); hideUpload(); return; }
 
+    const marcarProvisorio = document.getElementById('chkProvisorio').checked;
+
     showLoading();
     try {
         // Map to DB column names
@@ -1068,7 +1096,8 @@ async function confirmImport() {
             lote: r.lote,
             origem: r.origem,
             data: r.data,
-            estrutura: r.estrutura
+            estrutura: r.estrutura,
+            provisorio: marcarProvisorio
         }));
 
         // Insert in batches of 500
@@ -1098,6 +1127,7 @@ function uploadBackToStep1() {
     document.getElementById('uploadStep2').style.display = 'none';
     document.getElementById('uploadFooter1').style.display = '';
     document.getElementById('uploadFooter2').style.display = 'none';
+    document.getElementById('chkProvisorio').checked = false;
 }
 
 // ── Filter ───────────────────────────────────────
@@ -1107,11 +1137,14 @@ function getFiltered() {
     const re = document.getElementById('fResp').value;
     const g = document.getElementById('fGrupo').value;
     const c = document.getElementById('fConta').value;
+    const p = document.getElementById('fProv').value;
     return allData.filter(r => {
         if (m && r.mes !== m) return false;
         if (re && r.responsavel !== re) return false;
         if (g && r.grupoOXR !== g) return false;
         if (c && r.descricaoConta !== c) return false;
+        if (p === 'provisorio' && !r.provisorio) return false;
+        if (p === 'validado' && r.provisorio) return false;
         if (s && !`${r.descricaoConta} ${r.contaContabil} ${r.historico} ${r.grupoConta} ${r.subgrupoOXR}`.toLowerCase().includes(s)) return false;
         return true;
     });
@@ -1234,9 +1267,9 @@ function renderResumo(el, data) {
     el.innerHTML = `<div class="table-wrap"><table>
         <thead><tr><th></th><th>Descricao da Conta</th><th>Conta</th><th>Mes</th><th class="text-right">Orcado</th><th class="text-right">Realizado</th><th style="min-width:110px">Execucao</th><th class="text-right">Saldo</th></tr></thead>
         <tbody>
-        ${items.map((i, idx) => `<tr class="row-toggle" data-idx="${idx}">
+        ${items.map((i, idx) => { const hasP = i.itens.some(l => l.provisorio); return `<tr class="row-toggle${hasP ? ' row-provisorio' : ''}" data-idx="${idx}">
             <td>${statusBadge(i.status)}</td>
-            <td><div class="cell-main">${esc(i.descricaoConta)}</div><div class="cell-sub">${esc(i.grupoConta)}</div></td>
+            <td><div class="cell-main">${esc(i.descricaoConta)}${hasP ? ' <span class="badge badge-purple">Prov.</span>' : ''}</div><div class="cell-sub">${esc(i.grupoConta)}</div></td>
             <td class="cell-code">${esc(i.contaContabil)}</td>
             <td>${esc(i.mes)}</td>
             <td class="text-right mono">${fmt(i.orcado)}</td>
@@ -1246,15 +1279,16 @@ function renderResumo(el, data) {
         </tr>
         <tr class="row-detail" data-idx="${idx}"><td colspan="8">
             <table class="detail-table"><tbody>
-            ${i.itens.map(l => `<tr>
-                <td style="width:40%"><span class="dl">Historico</span><br>${esc(l.historico)}</td>
+            ${i.itens.map(l => `<tr${l.provisorio ? ' class="row-provisorio"' : ''}>
+                <td style="width:35%"><span class="dl">Historico</span><br>${esc(l.historico)}${l.provisorio ? ' <span class="badge badge-purple">Prov.</span>' : ''}</td>
                 <td class="text-right mono" style="width:15%"><span class="dl">Orcado</span><br>${fmt(l.orcado)}</td>
                 <td class="text-right mono" style="width:15%"><span class="dl">Real</span><br>${fmt(l.real)}</td>
-                <td style="width:15%"><span class="dl">Lote</span><br>${esc(l.lote)}</td>
-                <td style="width:15%"><span class="dl">Centro Custo</span><br>${esc(l.centroCusto)}</td>
+                <td style="width:12%"><span class="dl">Lote</span><br>${esc(l.lote)}</td>
+                <td style="width:12%"><span class="dl">Centro Custo</span><br>${esc(l.centroCusto)}</td>
+                <td style="width:11%">${l.provisorio ? `<button class="btn-validar" onclick="event.stopPropagation();validarEntry('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
             </tr>`).join('')}
             </tbody></table>
-        </td></tr>`).join('')}
+        </td></tr>`; }).join('')}
         <tr class="summary-row">
             <td colspan="4" class="text-right">Total</td>
             <td class="text-right mono">${fmt(tO)}</td>
@@ -1275,17 +1309,23 @@ function renderResumo(el, data) {
 function renderLancamentos(el, data) {
     const items = [...data].sort((a, b) => { const d = MONTH_ORDER.indexOf(a.mes) - MONTH_ORDER.indexOf(b.mes); return d || b.orcado - a.orcado; });
     if (!items.length) { el.innerHTML = emptyHTML(); return; }
-    el.innerHTML = `<div class="table-wrap"><table>
-        <thead><tr><th>Mes</th><th>Descricao</th><th>Historico</th><th>Conta</th><th>Lote</th><th class="text-right">Orcado</th><th class="text-right">Real</th><th>Responsavel</th></tr></thead>
-        <tbody>${items.map(r => `<tr>
+    const provCount = items.filter(r => r.provisorio).length;
+    const provHeader = provCount ? `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+        <span style="font-size:.8rem;color:var(--purple);font-weight:600">${provCount} lancamento(s) provisorio(s)</span>
+        <button class="btn-validar" onclick="validarTodos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar todos</button>
+    </div>` : '';
+    el.innerHTML = provHeader + `<div class="table-wrap"><table>
+        <thead><tr><th>Mes</th><th>Descricao</th><th>Historico</th><th>Conta</th><th>Lote</th><th class="text-right">Orcado</th><th class="text-right">Real</th><th>Responsavel</th><th></th></tr></thead>
+        <tbody>${items.map(r => `<tr${r.provisorio ? ' class="row-provisorio"' : ''}>
             <td>${esc(r.mes)}</td>
-            <td class="cell-main">${esc(r.descricaoConta)}</td>
+            <td class="cell-main">${esc(r.descricaoConta)}${r.provisorio ? ' <span class="badge badge-purple">Provisorio</span>' : ''}</td>
             <td style="max-width:240px;color:var(--t2)">${esc(r.historico)}</td>
             <td class="cell-code">${esc(r.contaContabil)}</td>
             <td>${r.lote === 'Or\u00E7ado' || r.lote === 'Orcado' ? '<span class="badge badge-gray">Orcado</span>' : '<span class="badge badge-green">' + esc(r.lote) + '</span>'}</td>
             <td class="text-right mono ${r.orcado < 0 ? 'c-red' : ''}">${fmt(r.orcado)}</td>
             <td class="text-right mono ${r.real < 0 ? 'c-red' : ''}">${fmt(r.real)}</td>
             <td style="color:var(--t2)">${esc(r.responsavel)}</td>
+            <td>${r.provisorio ? `<button class="btn-validar" onclick="validarEntry('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
         </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -1710,7 +1750,7 @@ document.querySelectorAll('.nav-item[data-tab]').forEach(t => t.addEventListener
 document.querySelectorAll('.nav-item[data-section]').forEach(t => t.addEventListener('click', () => setSection(t.dataset.section)));
 
 // Filters
-['fSearch', 'fMes', 'fResp', 'fGrupo', 'fConta'].forEach(id => {
+['fSearch', 'fMes', 'fResp', 'fGrupo', 'fConta', 'fProv'].forEach(id => {
     const ev = id === 'fSearch' ? 'input' : 'change';
     document.getElementById(id).addEventListener(ev, () => {
         if (id === 'fGrupo') renderFilters();
@@ -1740,6 +1780,40 @@ dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dra
 dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
 dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); if (e.dataTransfer.files[0]) importFile(e.dataTransfer.files[0]); });
 document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) importFile(e.target.files[0]); e.target.value = ''; });
+
+// ── Validar provisorios ─────────────────────────
+async function validarEntry(id) {
+    showLoading();
+    try {
+        const { error } = await sb.from('orcamento_lancamentos').update({ provisorio: false }).eq('id', id);
+        if (error) { toast('Erro ao validar: ' + error.message, true); return; }
+        await loadStore();
+        render();
+        toast('Lancamento validado');
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
+
+async function validarTodos() {
+    const provIds = getFiltered().filter(r => r.provisorio).map(r => r.id);
+    if (!provIds.length) { toast('Nenhum lancamento provisorio.', true); return; }
+    if (!confirm(`Validar ${provIds.length} lancamento(s) provisorio(s)?`)) return;
+    showLoading();
+    try {
+        const { error } = await sb.from('orcamento_lancamentos').update({ provisorio: false }).in('id', provIds);
+        if (error) { toast('Erro ao validar: ' + error.message, true); return; }
+        await loadStore();
+        render();
+        toast(`${provIds.length} lancamento(s) validado(s)`);
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
 
 // Actions
 async function clearAll() {

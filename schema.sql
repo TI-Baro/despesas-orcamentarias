@@ -27,6 +27,7 @@ create table orcamento_lancamentos (
   origem text,
   data text,
   estrutura text,
+  provisorio boolean default false,
   created_at timestamptz default now()
 );
 
@@ -98,3 +99,9 @@ alter table investimento_categorias enable row level security;
 create policy "Users manage own data" on investimento_categorias
   for all using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- =============================================
+-- Migracao: adicionar coluna provisorio
+-- Execute se a tabela orcamento_lancamentos ja existe:
+-- alter table orcamento_lancamentos add column if not exists provisorio boolean default false;
+-- =============================================
