@@ -364,6 +364,11 @@ textarea.form-input{resize:vertical;min-height:60px}
 tr.row-provisorio>td{background:var(--purple-bg)}
 tr.row-provisorio:hover>td{background:#ede9fe}
 .detail-table tr.row-provisorio>td{background:#ede9fe}
+/* ── Manual validado (confirmed manual entries) ── */
+.detail-table tr.row-manual>td{background:var(--blue-bg)}
+.detail-table tr.row-manual:hover>td{background:#dbeafe}
+/* ── Detail table actions ────────────────────────── */
+.detail-table td.detail-actions{padding:7px 10px 7px 10px;text-align:right;white-space:nowrap}
 .btn-validar{
   display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;
   font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--purple);
@@ -667,7 +672,7 @@ tr.row-provisorio:hover>td{background:#ede9fe}
 <div class="modal-overlay" id="novoLancamentoModal" style="display:none">
   <div class="modal modal-wide">
     <div class="modal-header">
-      <h2>Novo Lancamento</h2>
+      <h2 id="novoLancamentoTitle">Novo Lancamento</h2>
       <button class="modal-close" onclick="hideNovoLancamentoModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -687,9 +692,13 @@ tr.row-provisorio:hover>td{background:#ede9fe}
         <input type="text" class="form-input" id="nlDescricao" list="nlDescricaoList" placeholder="Descricao da conta">
         <datalist id="nlDescricaoList"></datalist>
       </div>
+      <div class="form-group">
+        <label class="form-label">Titulo *</label>
+        <input type="text" class="form-input" id="nlTitulo" placeholder="Ex: Licenca Microsoft, Servico Cloud...">
+      </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Valor Orcado *</label>
+          <label class="form-label">Valor Orcado</label>
           <input type="text" class="form-input" id="nlOrcado" placeholder="0,00">
         </div>
         <div class="form-group">
@@ -720,10 +729,6 @@ tr.row-provisorio:hover>td{background:#ede9fe}
           <input type="text" class="form-input" id="nlCentroCusto" list="nlCentroCustoList" placeholder="Centro de custo">
           <datalist id="nlCentroCustoList"></datalist>
         </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Historico</label>
-        <input type="text" class="form-input" id="nlHistorico" placeholder="Historico do lancamento">
       </div>
       <div class="form-group">
         <label class="form-label">Lote</label>
@@ -889,6 +894,8 @@ let activeTab = 'resumo';
 let activeSection = 'budget';
 let editingLinhaId = null;
 let addingTransToLinhaId = null;
+let nlResumoKey = null;
+let editingEntryId = null;
 
 // ── Loading helpers ─────────────────────────────
 function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
@@ -957,8 +964,21 @@ document.getElementById('btnRegister').addEventListener('click', handleRegister)
 document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
 
 // ── Data Layer: Load from Supabase ──────────────
+async function fetchAll(table) {
+    const PAGE = 1000;
+    let all = [], from = 0;
+    while (true) {
+        const { data, error } = await sb.from(table).select('*').range(from, from + PAGE - 1);
+        if (error) return { data: null, error };
+        if (!data || data.length === 0) break;
+        all = all.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+    }
+    return { data: all, error: null };
+}
 async function loadStore() {
-    const { data, error } = await sb.from('orcamento_lancamentos').select('*');
+    const { data, error } = await fetchAll('orcamento_lancamentos');
     if (error) { toast('Erro ao carregar orcamento: ' + error.message, true); return; }
     allData = (data || []).map(r => ({
         id: r.id,
@@ -988,9 +1008,9 @@ async function loadStore() {
 
 async function loadInvStore() {
     const [linhasRes, transRes, catsRes] = await Promise.all([
-        sb.from('investimento_linhas').select('*'),
-        sb.from('investimento_transacoes').select('*'),
-        sb.from('investimento_categorias').select('*')
+        fetchAll('investimento_linhas'),
+        fetchAll('investimento_transacoes'),
+        fetchAll('investimento_categorias')
     ]);
     if (linhasRes.error) { toast('Erro ao carregar linhas: ' + linhasRes.error.message, true); }
     if (transRes.error) { toast('Erro ao carregar transacoes: ' + transRes.error.message, true); }
@@ -1370,10 +1390,9 @@ function renderResumo(el, data) {
     if (!items.length) { el.innerHTML = emptyHTML(); return; }
     const tO = items.reduce((s, i) => s + i.orcado, 0), tR = items.reduce((s, i) => s + i.real, 0), tS = tO - tR;
     el.innerHTML = `<div class="table-wrap"><table>
-        <thead><tr><th></th><th>Descricao da Conta</th><th>Conta</th><th>Mes</th><th class="text-right">Orcado</th><th class="text-right">Realizado</th><th style="min-width:110px">Execucao</th><th class="text-right">Saldo</th></tr></thead>
+        <thead><tr><th>Descricao da Conta</th><th>Conta</th><th>Mes</th><th class="text-right">Orcado</th><th class="text-right">Realizado</th><th style="min-width:110px">Execucao</th><th class="text-right">Saldo</th></tr></thead>
         <tbody>
         ${items.map((i, idx) => { const hasP = i.itens.some(l => l.provisorio); return `<tr class="row-toggle${hasP ? ' row-provisorio' : ''}" data-idx="${idx}">
-            <td>${statusBadge(i.status)}</td>
             <td><div class="cell-main">${esc(i.descricaoConta)}${hasP ? ' <span class="badge badge-purple">Prov.</span>' : ''}</div><div class="cell-sub">${esc(i.grupoConta)}</div></td>
             <td class="cell-code">${esc(i.contaContabil)}</td>
             <td>${esc(i.mes)}</td>
@@ -1382,23 +1401,27 @@ function renderResumo(el, data) {
             <td><div style="font-size:.75rem;font-weight:600;color:var(--t2)">${fmtPct(Math.abs(i.pct))}</div>${progBar(i.pct, i.status)}</td>
             <td class="text-right mono ${i.saldo < 0 ? 'c-red' : ''}">${fmt(i.saldo)}</td>
         </tr>
-        <tr class="row-detail" data-idx="${idx}"><td colspan="8">
+        <tr class="row-detail" data-idx="${idx}"><td colspan="7">
             <table class="detail-table"><tbody>
-            ${i.itens.map(l => `<tr${l.provisorio ? ' class="row-provisorio"' : ''}>
-                <td style="width:35%"><span class="dl">Historico</span><br>${esc(l.historico)}${l.provisorio ? ' <span class="badge badge-purple">Prov.</span>' : ''}</td>
+            ${i.itens.map(l => { const rc = l.provisorio ? ' class="row-provisorio"' : (l.lote === 'Manual' ? ' class="row-manual"' : ''); return `<tr${rc}>
+                <td style="width:35%"><span class="dl">Titulo</span><br>${esc(l.historico)}${l.provisorio ? ' <span class="badge badge-purple">Prov.</span>' : (l.lote === 'Manual' ? ' <span class="badge badge-blue">Manual</span>' : '')}</td>
                 <td class="text-right mono" style="width:15%"><span class="dl">Orcado</span><br>${fmt(l.orcado)}</td>
                 <td class="text-right mono" style="width:15%"><span class="dl">Real</span><br>${fmt(l.real)}</td>
                 <td style="width:12%"><span class="dl">Lote</span><br>${esc(l.lote)}</td>
                 <td style="width:12%"><span class="dl">Centro Custo</span><br>${esc(l.centroCusto)}</td>
-                <td style="width:11%">${l.provisorio ? `<button class="btn-validar" onclick="event.stopPropagation();validarEntry('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
-            </tr>`).join('')}
+                <td style="width:11%" class="detail-actions" onclick="event.stopPropagation()">
+                    ${l.provisorio ? `<button class="btn-validar" onclick="validarEntry('${l.id}')" style="margin-right:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
+                    <button title="Editar" onclick="editEntry('${l.id}')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--t3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                    <button title="Excluir" onclick="deleteEntry('${l.id}')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--t3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                </td>
+            </tr>`; }).join('')}
             <tr><td colspan="6" style="text-align:right;padding-top:10px">
                 <button class="btn-novo-detalhe" onclick="event.stopPropagation();novoLancamentoFromResumo(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo Lancamento</button>
             </td></tr>
             </tbody></table>
         </td></tr>`; }).join('')}
         <tr class="summary-row">
-            <td colspan="4" class="text-right">Total</td>
+            <td colspan="3" class="text-right">Total</td>
             <td class="text-right mono">${fmt(tO)}</td>
             <td class="text-right mono">${fmt(tR)}</td>
             <td style="font-size:.75rem;font-weight:700">${tO ? fmtPct(tR / tO * 100) : '0%'}</td>
@@ -1919,6 +1942,54 @@ async function validarEntry(id) {
     }
 }
 
+function editEntry(id) {
+    const entry = allData.find(r => r.id === id);
+    if (!entry) return;
+    editingEntryId = id;
+    nlResumoKey = `${entry.descricaoConta}||${entry.contaContabil}||${entry.mes}`;
+    showNovoLancamentoModal({
+        mes: entry.mes,
+        responsavel: entry.responsavel,
+        descricaoConta: entry.descricaoConta,
+        contaContabil: entry.contaContabil,
+        grupoOXR: entry.grupoOXR,
+        grupoConta: entry.grupoConta,
+        centroCusto: entry.centroCusto,
+        titulo: entry.historico,
+        orcado: entry.orcado,
+        real: entry.real,
+        lote: entry.lote,
+        provisorio: entry.provisorio
+    });
+}
+
+async function deleteEntry(id) {
+    if (!confirm('Remover este lancamento?')) return;
+    const entry = allData.find(r => r.id === id);
+    const key = entry ? `${entry.descricaoConta}||${entry.contaContabil}||${entry.mes}` : null;
+    showLoading();
+    try {
+        const { error } = await sb.from('orcamento_lancamentos').delete().eq('id', id);
+        if (error) { toast('Erro ao remover: ' + error.message, true); return; }
+        await loadStore();
+        render();
+        if (key && activeTab === 'resumo') {
+            const el = document.getElementById('content');
+            const idx = resumoItems.findIndex(i => `${i.descricaoConta}||${i.contaContabil}||${i.mes}` === key);
+            if (idx >= 0) {
+                const row = el.querySelector(`.row-toggle[data-idx="${idx}"]`);
+                const detail = el.querySelector(`.row-detail[data-idx="${idx}"]`);
+                if (row && detail) { row.classList.add('open'); detail.classList.add('open'); }
+            }
+        }
+        toast('Lancamento removido');
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
+
 async function validarTodos() {
     const provIds = getFiltered().filter(r => r.provisorio).map(r => r.id);
     if (!provIds.length) { toast('Nenhum lancamento provisorio.', true); return; }
@@ -1994,7 +2065,17 @@ function populateNlDatalists() {
 
 function showNovoLancamentoModal(prefill) {
     const sel = document.getElementById('nlMes');
-    sel.innerHTML = MONTH_ORDER.map(m => `<option value="${m}">${m}</option>`).join('');
+    const mesesData = [...new Set(allData.map(r => r.mes))].filter(Boolean);
+    const meses = [...new Set([...mesesData, ...MONTH_ORDER])];
+    meses.sort((a, b) => {
+        const ia = MONTH_ORDER.indexOf(a), ib = MONTH_ORDER.indexOf(b);
+        if (ia >= 0 && ib >= 0) return ia - ib;
+        if (ia >= 0) return -1;
+        if (ib >= 0) return 1;
+        return a.localeCompare(b);
+    });
+    sel.innerHTML = meses.map(m => `<option value="${m}">${m}</option>`).join('');
+    document.getElementById('nlTitulo').value = '';
     document.getElementById('nlResponsavel').value = '';
     document.getElementById('nlDescricao').value = '';
     document.getElementById('nlOrcado').value = '';
@@ -2003,9 +2084,9 @@ function showNovoLancamentoModal(prefill) {
     document.getElementById('nlGrupoOXR').value = '';
     document.getElementById('nlGrupoConta').value = '';
     document.getElementById('nlCentroCusto').value = '';
-    document.getElementById('nlHistorico').value = '';
     document.getElementById('nlLote').value = 'Manual';
     document.getElementById('nlProvisorio').checked = false;
+    if (!prefill) { nlResumoKey = null; editingEntryId = null; }
     if (prefill) {
         if (prefill.mes) sel.value = prefill.mes;
         if (prefill.responsavel) document.getElementById('nlResponsavel').value = prefill.responsavel;
@@ -2014,18 +2095,26 @@ function showNovoLancamentoModal(prefill) {
         if (prefill.grupoOXR) document.getElementById('nlGrupoOXR').value = prefill.grupoOXR;
         if (prefill.grupoConta) document.getElementById('nlGrupoConta').value = prefill.grupoConta;
         if (prefill.centroCusto) document.getElementById('nlCentroCusto').value = prefill.centroCusto;
+        if (prefill.titulo) document.getElementById('nlTitulo').value = prefill.titulo;
+        if (prefill.orcado) document.getElementById('nlOrcado').value = String(prefill.orcado).replace('.', ',');
+        if (prefill.real) document.getElementById('nlReal').value = String(prefill.real).replace('.', ',');
+        if (prefill.lote) document.getElementById('nlLote').value = prefill.lote;
+        if (prefill.provisorio !== undefined) document.getElementById('nlProvisorio').checked = prefill.provisorio;
     }
+    document.getElementById('novoLancamentoTitle').textContent = editingEntryId ? 'Editar Lancamento' : 'Novo Lancamento';
     populateNlDatalists();
     document.getElementById('novoLancamentoModal').style.display = 'flex';
 }
 
 function hideNovoLancamentoModal() {
     document.getElementById('novoLancamentoModal').style.display = 'none';
+    editingEntryId = null;
 }
 
 function novoLancamentoFromResumo(idx) {
     const item = resumoItems[idx];
     if (!item) return;
+    nlResumoKey = `${item.descricaoConta}||${item.contaContabil}||${item.mes}`;
     showNovoLancamentoModal({
         mes: item.mes,
         responsavel: item.responsavel,
@@ -2041,32 +2130,50 @@ async function saveNovoLancamento() {
     const mes = document.getElementById('nlMes').value;
     const responsavel = document.getElementById('nlResponsavel').value.trim();
     const descricao = document.getElementById('nlDescricao').value.trim();
-    const orcadoStr = document.getElementById('nlOrcado').value;
-    if (!mes || !responsavel || !descricao || !orcadoStr) { toast('Preencha todos os campos obrigatorios.', true); return; }
-    const orcado = parseNum(orcadoStr);
+    const titulo = document.getElementById('nlTitulo').value.trim();
+    if (!mes || !responsavel || !descricao || !titulo) { toast('Preencha todos os campos obrigatorios.', true); return; }
+    const orcado = parseNum(document.getElementById('nlOrcado').value);
     const realVal = parseNum(document.getElementById('nlReal').value);
     const contaContabil = document.getElementById('nlContaContabil').value.trim();
     const grupoOXR = document.getElementById('nlGrupoOXR').value.trim();
     const grupoConta = document.getElementById('nlGrupoConta').value.trim();
     const centroCusto = document.getElementById('nlCentroCusto').value.trim();
-    const historico = document.getElementById('nlHistorico').value.trim();
     const lote = document.getElementById('nlLote').value.trim() || 'Manual';
     const provisorio = document.getElementById('nlProvisorio').checked;
 
     showLoading();
     try {
-        const { error } = await sb.from('orcamento_lancamentos').insert({
-            user_id: currentUser.id,
+        const payload = {
             mes, responsavel, descricao_conta: descricao, orcado,
             real_valor: realVal, conta_contabil: contaContabil,
             grupo_oxr: grupoOXR, grupo_conta: grupoConta,
-            centro_custo: centroCusto, historico, lote, provisorio
-        });
+            centro_custo: centroCusto, historico: titulo, lote, provisorio
+        };
+        let error;
+        if (editingEntryId) {
+            ({ error } = await sb.from('orcamento_lancamentos').update(payload).eq('id', editingEntryId));
+        } else {
+            payload.user_id = currentUser.id;
+            ({ error } = await sb.from('orcamento_lancamentos').insert(payload));
+        }
         if (error) { toast('Erro ao salvar: ' + error.message, true); hideLoading(); return; }
+        const savedKey = nlResumoKey;
         await loadStore();
         hideNovoLancamentoModal();
         render();
-        toast('Lancamento adicionado');
+        if (savedKey && activeTab === 'resumo') {
+            const el = document.getElementById('content');
+            const idx = resumoItems.findIndex(i => `${i.descricaoConta}||${i.contaContabil}||${i.mes}` === savedKey);
+            if (idx >= 0) {
+                const row = el.querySelector(`.row-toggle[data-idx="${idx}"]`);
+                const detail = el.querySelector(`.row-detail[data-idx="${idx}"]`);
+                if (row && detail) { row.classList.add('open'); detail.classList.add('open'); }
+            }
+        }
+        const wasEditing = !!editingEntryId;
+        nlResumoKey = null;
+        editingEntryId = null;
+        toast(wasEditing ? 'Lancamento atualizado' : 'Lancamento adicionado');
     } catch (e) {
         toast('Erro: ' + e.message, true);
     } finally {
