@@ -60,6 +60,7 @@ create table investimento_transacoes (
   fornecedor text,
   nota_fiscal text,
   observacao text,
+  provisorio boolean default false,
   created_at timestamptz default now()
 );
 
@@ -106,4 +107,5 @@ create policy "Users manage own data" on investimento_categorias
 -- Execute se as tabelas ja existem:
 -- alter table orcamento_lancamentos add column if not exists provisorio boolean default false;
 -- alter table investimento_linhas add column if not exists provisorio boolean default false;
+-- alter table investimento_transacoes add column if not exists provisorio boolean default false;
 -- =============================================
