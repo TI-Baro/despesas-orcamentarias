@@ -232,6 +232,11 @@ tbody tr:last-child td{border-bottom:none}
 .badge-gray{background:var(--surface2);color:var(--t3);border:1px solid var(--border)}
 .badge-blue{background:var(--blue-bg);color:var(--blue)}
 .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.badge-realizado{background:#ffc2c214;color:#b84040;border:1px solid #ffc2c244;font-weight:500;font-size:.65rem;padding:2px 8px;letter-spacing:.01em}
+.badge-realizado::before{display:none}
+.badge-with-remove{padding-right:5px}
+.badge-remove{cursor:pointer;margin-left:3px;font-weight:400;font-size:.75rem;opacity:.4;transition:opacity .15s}
+.badge-remove:hover{opacity:1;color:#d44}
 
 /* ── Progress ────────────────────────────────────── */
 .prog{width:100%;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;min-width:60px;margin-top:4px}
@@ -1374,6 +1379,66 @@ function canDelete(entry) {
     return false;
 }
 
+function fmtOrigemBadges(origem, entryId) {
+    if (!origem) return '';
+    const adds = origem.split(';').filter(s => s.startsWith('+'));
+    if (!adds.length) return '';
+    if (!canSeeValues()) return ' <span class="badge badge-realizado">+***</span>';
+    return adds.map((a, i) => {
+        const v = Number(a.replace('+', ''));
+        const removeBtn = entryId && canEdit({userId: currentUser?.id}) ? `<span class="badge-remove" onclick="event.stopPropagation();removeOrigemAdd('${entryId}',${i})" title="Remover este lancamento">&times;</span>` : '';
+        return ` <span class="badge badge-realizado badge-with-remove">+${fmt(v)}${removeBtn}</span>`;
+    }).join('');
+}
+
+async function removeOrigemAdd(entryId, addIndex) {
+    const entry = allData.find(r => r.id === entryId);
+    if (!entry) return;
+    if (!canEdit(entry)) { toast('Sem permissao.', true); return; }
+    const adds = (entry.origem || '').split(';').filter(s => s.startsWith('+'));
+    if (addIndex < 0 || addIndex >= adds.length) return;
+    const removedVal = Number(adds[addIndex].replace('+', ''));
+    if (!confirm(`Remover lancamento de +${fmt(removedVal)}?`)) return;
+    adds.splice(addIndex, 1);
+    const newOrigem = adds.join(';');
+    const newReal = entry.real - removedVal;
+    // Guardar keys das linhas abertas antes do re-render
+    const openKeys = [];
+    document.querySelectorAll('.row-toggle.open').forEach(row => {
+        const idx = row.dataset.idx;
+        if (idx !== undefined && resumoItems[idx]) {
+            const it = resumoItems[idx];
+            openKeys.push(`${it.descricaoConta}||${it.contaContabil}||${it.mes}`);
+        }
+    });
+    showLoading();
+    try {
+        const { error } = await sb.from('orcamento_lancamentos')
+            .update({ real_valor: newReal, origem: newOrigem })
+            .eq('id', entryId);
+        if (error) { toast('Erro ao remover: ' + error.message, true); return; }
+        await loadStore();
+        render();
+        // Reabrir todas as linhas que estavam abertas
+        if (activeTab === 'resumo' && openKeys.length) {
+            const el = document.getElementById('content');
+            resumoItems.forEach((it, idx) => {
+                const k = `${it.descricaoConta}||${it.contaContabil}||${it.mes}`;
+                if (openKeys.includes(k)) {
+                    const row = el.querySelector(`.row-toggle[data-idx="${idx}"]`);
+                    const detail = el.querySelector(`.row-detail[data-idx="${idx}"]`);
+                    if (row && detail) { row.classList.add('open'); detail.classList.add('open'); }
+                }
+            });
+        }
+        toast('Lancamento removido');
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
+
 function toggleValuesVisibility() {
     valuesHidden = !valuesHidden;
     document.getElementById('lblToggleValues').textContent = valuesHidden ? 'Mostrar valores' : 'Ocultar valores';
@@ -1933,7 +1998,7 @@ function renderResumo(el, data) {
             ${i.itens.map(l => { const rc = l.provisorio ? ' class="row-provisorio"' : (l.lote === 'Manual' ? ' class="row-manual"' : ''); return `<tr${rc}>
                 <td style="width:35%"><span class="dl">Titulo</span><br>${esc(l.historico)}${l.provisorio ? ' <span class="badge badge-purple">Prov.</span>' : (l.lote === 'Manual' ? ' <span class="badge badge-blue">Manual</span>' : '')}</td>
                 <td class="text-right mono" style="width:15%"><span class="dl">Orcado</span><br>${fmt(l.orcado)}</td>
-                <td class="text-right mono" style="width:15%"><span class="dl">Real</span><br>${fmt(l.real)}</td>
+                <td class="text-right mono" style="width:15%"><span class="dl">Real</span><br>${fmt(l.real)}${fmtOrigemBadges(l.origem, l.id)}</td>
                 <td style="width:12%"><span class="dl">Lote</span><br>${esc(l.lote)}</td>
                 <td style="width:12%"><span class="dl">Centro Custo</span><br>${esc(l.centroCusto)}</td>
                 <td style="width:11%" class="detail-actions" onclick="event.stopPropagation()">
@@ -1981,7 +2046,7 @@ function renderLancamentos(el, data) {
             <td class="cell-code">${esc(r.contaContabil)}</td>
             <td>${r.lote === 'Or\u00E7ado' || r.lote === 'Orcado' ? '<span class="badge badge-gray">Orcado</span>' : '<span class="badge badge-green">' + esc(r.lote) + '</span>'}</td>
             <td class="text-right mono ${r.orcado < 0 ? 'c-red' : ''}">${fmt(r.orcado)}</td>
-            <td class="text-right mono ${r.real < 0 ? 'c-red' : ''}">${fmt(r.real)}</td>
+            <td class="text-right mono ${r.real < 0 ? 'c-red' : ''}">${fmt(r.real)}${fmtOrigemBadges(r.origem, r.id)}</td>
             <td style="color:var(--t2)">${esc(r.responsavel)}</td>
             <td>${r.provisorio && canValidate() ? `<button class="btn-validar" onclick="validarEntry('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
         </tr>`).join('')}</tbody></table></div>`;
@@ -2695,6 +2760,8 @@ async function saveNovoLancamento() {
         let error;
         let mergedExisting = false;
         if (editingEntryId) {
+            // Editing directly clears the addition log — user is setting the value explicitly
+            payload.origem = '';
             ({ error } = await sb.from('orcamento_lancamentos').update(payload).eq('id', editingEntryId));
         } else {
             // Check if entry with same descricaoConta + contaContabil + mes + historico already exists
@@ -2705,15 +2772,22 @@ async function saveNovoLancamento() {
                 r.historico === titulo
             );
             if (existing) {
-                // Merge: update existing entry adding/replacing values
+                // Merge: add realVal to existing real (additive)
+                const newReal = realVal ? existing.real + realVal : existing.real;
+                // Track manual additions in origem field (e.g. "+500;+300")
+                let origemLog = existing.origem || '';
+                if (realVal) {
+                    origemLog = origemLog ? origemLog + ';+' + realVal : '+' + realVal;
+                }
                 const mergePayload = {
                     orcado: orcado || existing.orcado,
-                    real_valor: realVal || existing.real,
+                    real_valor: newReal,
                     responsavel: responsavel || existing.responsavel,
                     grupo_oxr: grupoOXR || existing.grupoOXR,
                     grupo_conta: grupoConta || existing.grupoConta,
                     centro_custo: centroCusto || existing.centroCusto,
                     lote: existing.lote,
+                    origem: origemLog,
                     provisorio: provisorio
                 };
                 ({ error } = await sb.from('orcamento_lancamentos').update(mergePayload).eq('id', existing.id));
@@ -2740,7 +2814,7 @@ async function saveNovoLancamento() {
         const wasEditing = !!editingEntryId;
         nlResumoKey = null;
         editingEntryId = null;
-        toast(wasEditing ? 'Lancamento atualizado' : mergedExisting ? 'Lancamento existente atualizado' : 'Lancamento adicionado');
+        toast(wasEditing ? 'Lancamento atualizado' : mergedExisting ? 'Valor adicionado ao lancamento existente' : 'Lancamento adicionado');
     } catch (e) {
         toast('Erro: ' + e.message, true);
     } finally {
