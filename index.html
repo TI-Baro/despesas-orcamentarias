@@ -404,6 +404,81 @@ tr.row-provisorio:hover>td{background:#ede9fe}
   border-radius:50%;animation:spin .6s linear infinite;
 }
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Pending Screen ────────────────────────────── */
+.pending-screen{
+  display:none;align-items:center;justify-content:center;min-height:100vh;
+  background:linear-gradient(135deg,#e6f0e9 0%,var(--surface) 50%,#e6f0e9 100%);
+}
+.pending-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:40px;width:100%;max-width:440px;box-shadow:var(--shadow2);text-align:center;
+}
+.pending-card .pending-icon{
+  width:64px;height:64px;background:var(--amber-bg);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+}
+.pending-card .pending-icon svg{width:32px;height:32px;color:var(--amber)}
+.pending-card h2{font-size:1.25rem;font-weight:700;margin-bottom:8px;color:var(--t1)}
+.pending-card p{font-size:.875rem;color:var(--t2);margin-bottom:20px;line-height:1.6}
+.pending-card .pending-email{
+  font-weight:600;color:var(--t1);background:var(--surface2);
+  padding:8px 16px;border-radius:8px;display:inline-block;margin-bottom:20px;font-size:.875rem;
+}
+
+/* ── Config Section ────────────────────────────── */
+.config-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.config-table th{
+  text-align:left;padding:10px 12px;font-weight:600;font-size:.75rem;
+  color:var(--t3);text-transform:uppercase;letter-spacing:.04em;
+  border-bottom:1px solid var(--border);
+}
+.config-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--t1)}
+.config-table tr:last-child td{border-bottom:none}
+.role-select{
+  padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;
+  font-size:.8rem;background:var(--surface);color:var(--t1);cursor:pointer;
+}
+.role-select:disabled{opacity:.5;cursor:not-allowed}
+.badge-admin{
+  display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:600;
+  background:var(--green-bg);color:var(--green);
+}
+.badge-pending{
+  display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:600;
+  background:var(--amber-bg);color:var(--amber);
+}
+.btn-remove-profile{
+  background:none;border:none;color:var(--red);cursor:pointer;font-size:.8rem;
+  font-weight:500;font-family:inherit;padding:4px 8px;border-radius:6px;
+}
+.btn-remove-profile:hover{background:var(--red-bg)}
+.badge-operador{
+  display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:600;
+  background:var(--blue-bg);color:var(--blue);
+}
+.badge-aux{
+  display:inline-block;padding:2px 8px;border-radius:99px;font-size:.7rem;font-weight:600;
+  background:var(--purple-bg);color:var(--purple);
+}
+.sidebar-role-badge{font-size:.65rem;font-weight:600;padding:2px 10px;border-radius:99px;display:inline-block;margin:0 12px 4px}
+
+/* ── Permissions Matrix ────────────────────────── */
+.perm-matrix{width:100%;border-collapse:collapse;font-size:.8rem}
+.perm-matrix th{
+  padding:10px 14px;text-align:center;font-weight:600;font-size:.75rem;
+  color:var(--t3);text-transform:uppercase;letter-spacing:.04em;
+  border-bottom:2px solid var(--border);background:var(--surface2);
+}
+.perm-matrix th:first-child{text-align:left;min-width:200px}
+.perm-matrix td{padding:8px 14px;text-align:center;border-bottom:1px solid var(--border);color:var(--t2)}
+.perm-matrix td:first-child{text-align:left;font-weight:500;color:var(--t1)}
+.perm-matrix tr:last-child td{border-bottom:none}
+.perm-matrix tbody tr:hover{background:var(--surface2)}
+.perm-check{color:var(--green);font-size:1rem}
+.perm-cross{color:var(--red);font-size:1rem;opacity:.5}
+.perm-mask{color:var(--purple);font-size:.75rem;font-weight:700}
+.perm-own{color:var(--blue);font-size:.7rem;font-weight:600}
 </style>
 </head>
 <body>
@@ -429,6 +504,20 @@ tr.row-provisorio:hover>td{background:#ede9fe}
     </div>
     <button class="btn-login primary" id="btnLogin">Entrar</button>
     <button class="btn-login secondary" id="btnRegister">Criar conta</button>
+  </div>
+</div>
+
+<!-- ── Pending Screen (aguardando aprovacao) ─────── -->
+<div class="pending-screen" id="pendingScreen">
+  <div class="pending-card">
+    <div class="pending-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h2>Aguardando aprovacao</h2>
+    <p>Sua conta foi criada com sucesso, mas ainda nao foi aprovada por um administrador. Aguarde a liberacao do acesso.</p>
+    <div class="pending-email" id="pendingEmail"></div>
+    <br>
+    <button class="btn-login secondary" onclick="handleLogout()" style="margin-top:12px">Sair</button>
   </div>
 </div>
 
@@ -476,10 +565,21 @@ tr.row-provisorio:hover>td{background:#ede9fe}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Exportar
     </button>
+    <button class="nav-item" id="btnToggleValues" onclick="toggleValuesVisibility()">
+      <svg id="iconToggleValues" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span id="lblToggleValues">Ocultar valores</span>
+    </button>
+
+    <div class="nav-divider" id="configDivider" style="display:none"></div>
+    <div class="nav-label" id="configLabel" style="display:none">Sistema</div>
+    <button class="nav-item" data-section="configuracoes" id="btnConfiguracoes" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Configuracoes
+    </button>
 
     <div class="sidebar-footer">
       <div class="user-email" id="userEmail"></div>
-      <button class="nav-item btn-danger" onclick="clearAll()" style="color:var(--red)">
+      <button class="nav-item btn-danger" id="btnClearAll" onclick="clearAll()" style="color:var(--red)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
         Limpar dados
       </button>
@@ -500,11 +600,11 @@ tr.row-provisorio:hover>td{background:#ede9fe}
         <div class="month-pills" id="monthPills"></div>
       </div>
       <div class="header-actions">
-        <button class="btn" onclick="exportCSV()">
+        <button class="btn" id="headerExportBtn" onclick="exportCSV()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar
         </button>
-        <button class="btn" onclick="showUpload()">
+        <button class="btn" id="headerImportBtn" onclick="showUpload()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Importar CSV
         </button>
@@ -625,6 +725,130 @@ tr.row-provisorio:hover>td{background:#ede9fe}
       <div id="invContent"></div>
     </div>
    </div><!-- /investSection -->
+
+   <div id="configSection" style="display:none">
+    <div class="page-header">
+      <div>
+        <h1>Configuracoes</h1>
+        <p>Gerenciamento de usuarios e permissoes</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" onclick="showAddUserModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          Adicionar Usuario
+        </button>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:auto">
+      <table class="config-table">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Nome</th>
+            <th>Perfil</th>
+            <th>Criado em</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="configUsersBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:24px">
+      <h2 style="font-size:1.1rem;font-weight:700;margin-bottom:12px;color:var(--t1)">Matriz de Permissoes</h2>
+      <div class="card" style="padding:0;overflow:auto">
+        <table class="perm-matrix">
+          <thead>
+            <tr>
+              <th>Permissao</th>
+              <th><span class="badge-admin">Admin</span></th>
+              <th><span class="badge-operador">Operador</span></th>
+              <th><span class="badge-aux">Op. Auxiliar</span></th>
+              <th><span class="badge-pending">Pendente</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Acessar o sistema</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Criar lancamentos</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Editar lancamentos</td>
+              <td><span class="perm-check">&#10003;</span> <span class="perm-own">Todos</span></td>
+              <td><span class="perm-check">&#10003;</span> <span class="perm-own">Todos</span></td>
+              <td><span class="perm-check">&#10003;</span> <span class="perm-own">Proprios</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Excluir lancamentos</td>
+              <td><span class="perm-check">&#10003;</span> <span class="perm-own">Todos</span></td>
+              <td><span class="perm-check">&#10003;</span> <span class="perm-own">Proprios</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Ver valores monetarios</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-mask">***</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Ver dados de todos os usuarios</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-own">So proprios</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Importar CSV</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Exportar CSV</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Limpar dados</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Validar provisorios</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+            <tr>
+              <td>Gerenciar usuarios (Configuracoes)</td>
+              <td><span class="perm-check">&#10003;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+              <td><span class="perm-cross">&#10007;</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+   </div><!-- /configSection -->
 
   </main>
 </div>
@@ -870,6 +1094,49 @@ tr.row-provisorio:hover>td{background:#ede9fe}
   </div>
 </div>
 
+<!-- Modal Adicionar Usuario -->
+<div class="modal-overlay" id="addUserModal" style="display:none">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <h2>Adicionar Usuario</h2>
+      <button class="modal-close" onclick="hideAddUserModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" class="form-input" id="addUserEmail" placeholder="usuario@email.com">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input type="text" class="form-input" id="addUserNome" placeholder="Nome do usuario">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Perfil *</label>
+          <select class="form-input" id="addUserPerfil">
+            <option value="operador">Operador</option>
+            <option value="administrador">Administrador</option>
+            <option value="operador_auxiliar">Operador Auxiliar</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha *</label>
+        <input type="text" class="form-input" id="addUserPassword" placeholder="Minimo 6 caracteres">
+      </div>
+      <div style="background:var(--blue-bg);color:var(--blue);padding:10px 14px;border-radius:8px;font-size:.8rem;font-weight:500;display:flex;align-items:flex-start;gap:8px;margin-top:4px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        O usuario recebera um email de confirmacao e podera fazer login com a senha informada.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="hideAddUserModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="addUser()">Criar Usuario</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
   <span id="toastMsg"></span>
@@ -885,6 +1152,8 @@ tr.row-provisorio:hover>td{background:#ede9fe}
 // ── Supabase Client ─────────────────────────────
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
+let currentUserProfile = null;
+let allProfiles = [];
 
 // ── Constants ───────────────────────────────────
 const MONTH_ORDER = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -897,6 +1166,7 @@ let invData = { linhas: [], transacoes: [], categorias: [] };
 let activeTab = 'resumo';
 let activeSection = 'budget';
 let editingLinhaId = null;
+let valuesHidden = false;
 let addingTransToLinhaId = null;
 let nlResumoKey = null;
 let editingEntryId = null;
@@ -946,16 +1216,29 @@ function showLoginInfo(msg) {
 sb.auth.onAuthStateChange(async (event, session) => {
     if (session && session.user) {
         currentUser = session.user;
+        currentUserProfile = await ensureUserProfile();
+        if (!currentUserProfile || currentUserProfile.perfil === 'pendente') {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appLayout').style.display = 'none';
+            document.getElementById('pendingScreen').style.display = 'flex';
+            document.getElementById('pendingEmail').textContent = currentUser.email;
+            return;
+        }
         document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('pendingScreen').style.display = 'none';
         document.getElementById('appLayout').style.display = 'flex';
         document.getElementById('userEmail').textContent = currentUser.email;
+        applyPermissions();
         await bootApp();
     } else {
         currentUser = null;
+        currentUserProfile = null;
+        allProfiles = [];
         allData = [];
         invData = { linhas: [], transacoes: [], categorias: [] };
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appLayout').style.display = 'none';
+        document.getElementById('pendingScreen').style.display = 'none';
         document.getElementById('loginEmail').value = '';
         document.getElementById('loginPassword').value = '';
         showLoginError(''); showLoginInfo('');
@@ -986,6 +1269,7 @@ async function loadStore() {
     if (error) { toast('Erro ao carregar orcamento: ' + error.message, true); return; }
     allData = (data || []).map(r => ({
         id: r.id,
+        userId: r.user_id,
         mes: r.mes || '',
         tipo: r.tipo || '',
         responsavel: r.responsavel || '',
@@ -1022,6 +1306,7 @@ async function loadInvStore() {
 
     invData.linhas = (linhasRes.data || []).map(r => ({
         id: r.id,
+        userId: r.user_id,
         nome: r.nome,
         descricao: r.descricao || '',
         categoria: r.categoria,
@@ -1035,6 +1320,7 @@ async function loadInvStore() {
     }));
     invData.transacoes = (transRes.data || []).map(r => ({
         id: r.id,
+        userId: r.user_id,
         linhaId: r.linha_id,
         descricao: r.descricao,
         valor: Number(r.valor) || 0,
@@ -1049,7 +1335,236 @@ async function loadInvStore() {
     invData.categorias = savedCats.length ? savedCats : [...INV_DEFAULT_CATS];
 }
 
-// ── Boot App (after login) ──────────────────────
+// ── User Profile & Permissions ──────────────────
+async function ensureUserProfile() {
+    try {
+        const { data, error } = await sb.rpc('ensure_profile');
+        if (error) { console.error('ensure_profile error:', error); return null; }
+        return {
+            id: data.id,
+            userId: data.user_id,
+            email: data.email,
+            nome: data.nome,
+            perfil: data.perfil,
+            createdAt: data.created_at
+        };
+    } catch (e) { console.error('ensureUserProfile:', e); return null; }
+}
+
+// ── Permission Helpers ──────────────────────────
+function userRole() { return (currentUserProfile && currentUserProfile.perfil) || 'pendente'; }
+function isAdmin() { return userRole() === 'administrador'; }
+function isOperador() { return userRole() === 'operador'; }
+function isOperadorAuxiliar() { return userRole() === 'operador_auxiliar'; }
+function canCreate() { return isAdmin() || isOperador() || isOperadorAuxiliar(); }
+function canSeeValues() { return !isOperadorAuxiliar() && !valuesHidden; }
+function canClearAll() { return isAdmin(); }
+function canImportCSV() { return isAdmin() || isOperador(); }
+function canExportCSV() { return isAdmin() || isOperador(); }
+function canValidate() { return isAdmin() || isOperador(); }
+
+function canEdit(entry) {
+    if (isAdmin() || isOperador()) return true;
+    if (isOperadorAuxiliar()) return entry && entry.userId === currentUser.id;
+    return false;
+}
+function canDelete(entry) {
+    if (isAdmin()) return true;
+    if (isOperador()) return entry && entry.userId === currentUser.id;
+    return false;
+}
+
+function toggleValuesVisibility() {
+    valuesHidden = !valuesHidden;
+    document.getElementById('lblToggleValues').textContent = valuesHidden ? 'Mostrar valores' : 'Ocultar valores';
+    document.getElementById('iconToggleValues').innerHTML = valuesHidden
+        ? '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    render();
+    if (activeSection === 'investimentos') renderInvestimentos();
+}
+
+function applyPermissions() {
+    // Configuracoes: admin only
+    document.getElementById('btnConfiguracoes').style.display = isAdmin() ? '' : 'none';
+    document.getElementById('configDivider').style.display = isAdmin() ? '' : 'none';
+    document.getElementById('configLabel').style.display = isAdmin() ? '' : 'none';
+
+    // Sidebar: Limpar dados
+    const clearBtn = document.getElementById('btnClearAll');
+    if (clearBtn) clearBtn.style.display = canClearAll() ? '' : 'none';
+
+    // Sidebar: Importar CSV
+    const importBtn = document.querySelector('.nav-item[onclick="showUpload()"]');
+    if (importBtn) importBtn.style.display = canImportCSV() ? '' : 'none';
+
+    // Sidebar: Exportar
+    const exportBtn = document.querySelector('.nav-item[onclick="exportCSV()"]');
+    if (exportBtn) exportBtn.style.display = canExportCSV() ? '' : 'none';
+
+    // Header buttons
+    const headerExportBtn = document.getElementById('headerExportBtn');
+    if (headerExportBtn) headerExportBtn.style.display = canExportCSV() ? '' : 'none';
+    const headerImportBtn = document.getElementById('headerImportBtn');
+    if (headerImportBtn) headerImportBtn.style.display = canImportCSV() ? '' : 'none';
+
+    // Role badge below user email
+    let roleBadgeEl = document.getElementById('sidebarRoleBadge');
+    if (!roleBadgeEl) {
+        roleBadgeEl = document.createElement('div');
+        roleBadgeEl.id = 'sidebarRoleBadge';
+        const emailEl = document.getElementById('userEmail');
+        emailEl.parentNode.insertBefore(roleBadgeEl, emailEl.nextSibling);
+    }
+    const roleLabels = {
+        administrador: ['Admin', 'background:var(--green-bg);color:var(--green)'],
+        operador: ['Operador', 'background:var(--blue-bg);color:var(--blue)'],
+        operador_auxiliar: ['Op. Auxiliar', 'background:var(--purple-bg);color:var(--purple)'],
+        pendente: ['Pendente', 'background:var(--amber-bg);color:var(--amber)']
+    };
+    const [rLabel, rStyle] = roleLabels[userRole()] || ['?', ''];
+    roleBadgeEl.innerHTML = `<span class="sidebar-role-badge" style="${rStyle}">${rLabel}</span>`;
+}
+
+async function loadAndRenderConfig() {
+    showLoading();
+    try {
+        const { data, error } = await sb.from('user_profiles').select('*').order('created_at', { ascending: true });
+        if (error) { toast('Erro ao carregar usuarios: ' + error.message, true); return; }
+        allProfiles = (data || []).map(r => ({
+            id: r.id, userId: r.user_id, email: r.email, nome: r.nome,
+            perfil: r.perfil, createdAt: r.created_at
+        }));
+        renderConfigTable();
+    } catch (e) { toast('Erro: ' + e.message, true); }
+    finally { hideLoading(); }
+}
+
+function renderConfigTable() {
+    const tbody = document.getElementById('configUsersBody');
+    if (!allProfiles.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px">Nenhum usuario encontrado</td></tr>';
+        return;
+    }
+    const badgeMap = {
+        administrador: '<span class="badge-admin">Admin</span>',
+        operador: '<span class="badge-operador">Operador</span>',
+        operador_auxiliar: '<span class="badge-aux">Op. Auxiliar</span>',
+        pendente: '<span class="badge-pending">Pendente</span>'
+    };
+    tbody.innerHTML = allProfiles.map(p => {
+        const isSelf = p.userId === currentUser.id;
+        const badge = badgeMap[p.perfil] || badgeMap.pendente;
+        const dt = p.createdAt ? new Date(p.createdAt).toLocaleDateString('pt-BR') : '-';
+        return `<tr>
+            <td>${esc(p.email || '-')}</td>
+            <td>${esc(p.nome || '-')}</td>
+            <td>
+                <select class="role-select" onchange="updateUserRole('${p.id}', this.value)" ${isSelf ? 'disabled' : ''}>
+                    <option value="administrador" ${p.perfil === 'administrador' ? 'selected' : ''}>Administrador</option>
+                    <option value="operador" ${p.perfil === 'operador' ? 'selected' : ''}>Operador</option>
+                    <option value="operador_auxiliar" ${p.perfil === 'operador_auxiliar' ? 'selected' : ''}>Operador Auxiliar</option>
+                    <option value="pendente" ${p.perfil === 'pendente' ? 'selected' : ''}>Pendente</option>
+                </select>
+                ${badge}
+            </td>
+            <td>${dt}</td>
+            <td>${isSelf ? '-' : `<button class="btn-remove-profile" onclick="removeUserProfile('${p.id}')">Remover</button>`}</td>
+        </tr>`;
+    }).join('');
+}
+
+async function updateUserRole(profileId, newRole) {
+    const { error } = await sb.from('user_profiles').update({ perfil: newRole }).eq('id', profileId);
+    if (error) { toast('Erro ao atualizar perfil: ' + error.message, true); loadAndRenderConfig(); return; }
+    toast('Perfil atualizado com sucesso');
+    await loadAndRenderConfig();
+}
+
+async function removeUserProfile(profileId) {
+    const profile = allProfiles.find(p => p.id === profileId);
+    const label = profile ? profile.email : profileId;
+    if (!confirm(`Remover perfil de "${label}"? O usuario voltara ao estado pendente no proximo login.`)) return;
+    const { error } = await sb.from('user_profiles').delete().eq('id', profileId);
+    if (error) { toast('Erro ao remover perfil: ' + error.message, true); return; }
+    toast('Perfil removido com sucesso');
+    await loadAndRenderConfig();
+}
+
+// ── Adicionar Usuario ──────────────────────────
+function showAddUserModal() {
+    document.getElementById('addUserEmail').value = '';
+    document.getElementById('addUserNome').value = '';
+    document.getElementById('addUserPassword').value = '';
+    document.getElementById('addUserPerfil').value = 'operador';
+    document.getElementById('addUserModal').style.display = 'flex';
+}
+function hideAddUserModal() {
+    document.getElementById('addUserModal').style.display = 'none';
+}
+document.getElementById('addUserModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideAddUserModal(); });
+
+async function addUser() {
+    const email = document.getElementById('addUserEmail').value.trim().toLowerCase();
+    const nome = document.getElementById('addUserNome').value.trim();
+    const password = document.getElementById('addUserPassword').value;
+    const perfil = document.getElementById('addUserPerfil').value;
+
+    if (!email || !password) { toast('Preencha email e senha.', true); return; }
+    if (password.length < 6) { toast('A senha deve ter pelo menos 6 caracteres.', true); return; }
+
+    // Check if email already exists in profiles
+    if (allProfiles.some(p => p.email && p.email.toLowerCase() === email)) {
+        toast('Ja existe um usuario com este email.', true); return;
+    }
+
+    showLoading();
+    try {
+        // 1. Create auth user via Supabase Auth REST API (no session interference)
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ email, password })
+        });
+        const result = await res.json();
+
+        if (!res.ok) {
+            const msg = result.msg || result.error_description || result.message || 'Erro ao criar usuario';
+            toast(msg, true);
+            return;
+        }
+
+        const newUserId = result.id || (result.user && result.user.id);
+        if (!newUserId) {
+            toast('Erro: nao foi possivel obter o ID do usuario criado.', true);
+            return;
+        }
+
+        // 2. Create profile with desired role via RPC (security definer)
+        const { error: rpcError } = await sb.rpc('admin_create_profile', {
+            p_user_id: newUserId,
+            p_email: email,
+            p_nome: nome || null,
+            p_perfil: perfil
+        });
+        if (rpcError) {
+            toast('Usuario criado mas erro ao definir perfil: ' + rpcError.message, true);
+        } else {
+            toast('Usuario criado com sucesso');
+        }
+
+        hideAddUserModal();
+        await loadAndRenderConfig();
+    } catch (e) {
+        toast('Erro: ' + e.message, true);
+    } finally {
+        hideLoading();
+    }
+}
+
 async function bootApp() {
     showLoading();
     try {
@@ -1311,8 +1826,14 @@ function getStatus(o, r) {
 }
 
 // ── Format ───────────────────────────────────────
-function fmt(v) { return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v); }
-function fmtPct(v) { return v.toFixed(1) + '%'; }
+function fmt(v) {
+    if (!canSeeValues()) return '***';
+    return new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' }).format(v);
+}
+function fmtPct(v) {
+    if (!canSeeValues()) return '***';
+    return v.toFixed(1) + '%';
+}
 
 function statusBadge(s) {
     const map = { estourado:['Estourado','badge-red'], atencao:['Atencao','badge-amber'], ok:['OK','badge-green'], pendente:['Pendente','badge-gray'], reembolso:['Reembolso','badge-blue'], vazio:['--','badge-gray'] };
@@ -1321,6 +1842,7 @@ function statusBadge(s) {
 }
 
 function progBar(pct, status) {
+    if (!canSeeValues()) return '<div class="prog"><div class="prog-fill" style="width:0%"></div></div>';
     const w = Math.min(Math.abs(pct), 100);
     const colors = { estourado:'var(--red)', atencao:'var(--amber)', ok:'var(--green)', pendente:'var(--border2)', reembolso:'var(--blue)', vazio:'var(--border2)' };
     return `<div class="prog"><div class="prog-fill" style="width:${w}%;background:${colors[status]||'var(--border2)'}"></div></div>`;
@@ -1415,14 +1937,14 @@ function renderResumo(el, data) {
                 <td style="width:12%"><span class="dl">Lote</span><br>${esc(l.lote)}</td>
                 <td style="width:12%"><span class="dl">Centro Custo</span><br>${esc(l.centroCusto)}</td>
                 <td style="width:11%" class="detail-actions" onclick="event.stopPropagation()">
-                    ${l.provisorio ? `<button class="btn-validar" onclick="validarEntry('${l.id}')" style="margin-right:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
-                    <button title="Editar" onclick="editEntry('${l.id}')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--t3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button title="Excluir" onclick="deleteEntry('${l.id}')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--t3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                    ${l.provisorio && canValidate() ? `<button class="btn-validar" onclick="validarEntry('${l.id}')" style="margin-right:2px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
+                    ${canEdit(l) ? `<button title="Editar" onclick="editEntry('${l.id}')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--t3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+                    ${canDelete(l) ? `<button title="Excluir" onclick="deleteEntry('${l.id}')" style="background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;color:var(--t3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>` : ''}
                 </td>
             </tr>`; }).join('')}
-            <tr><td colspan="6" style="text-align:right;padding-top:10px">
+            ${canCreate() ? `<tr><td colspan="6" style="text-align:right;padding-top:10px">
                 <button class="btn-novo-detalhe" onclick="event.stopPropagation();novoLancamentoFromResumo(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Novo Lancamento</button>
-            </td></tr>
+            </td></tr>` : ''}
             </tbody></table>
         </td></tr>`; }).join('')}
         <tr class="summary-row">
@@ -1446,7 +1968,7 @@ function renderLancamentos(el, data) {
     const items = [...data].sort((a, b) => { const d = MONTH_ORDER.indexOf(a.mes) - MONTH_ORDER.indexOf(b.mes); return d || b.orcado - a.orcado; });
     if (!items.length) { el.innerHTML = emptyHTML(); return; }
     const provCount = items.filter(r => r.provisorio).length;
-    const provHeader = provCount ? `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+    const provHeader = (provCount && canValidate()) ? `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
         <span style="font-size:.8rem;color:var(--purple);font-weight:600">${provCount} lancamento(s) provisorio(s)</span>
         <button class="btn-validar" onclick="validarTodos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar todos</button>
     </div>` : '';
@@ -1461,7 +1983,7 @@ function renderLancamentos(el, data) {
             <td class="text-right mono ${r.orcado < 0 ? 'c-red' : ''}">${fmt(r.orcado)}</td>
             <td class="text-right mono ${r.real < 0 ? 'c-red' : ''}">${fmt(r.real)}</td>
             <td style="color:var(--t2)">${esc(r.responsavel)}</td>
-            <td>${r.provisorio ? `<button class="btn-validar" onclick="validarEntry('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
+            <td>${r.provisorio && canValidate() ? `<button class="btn-validar" onclick="validarEntry('${r.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}</td>
         </tr>`).join('')}</tbody></table></div>`;
 }
 
@@ -1631,7 +2153,7 @@ function renderInvTable() {
     const tR = linhas.reduce((s, l) => s + getLinhaRealizado(l.id), 0);
     const tS = tO - tR;
     const invProvCount = linhas.filter(l => l.provisorio).length;
-    const invProvHeader = invProvCount ? `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+    const invProvHeader = (invProvCount && canValidate()) ? `<div style="padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
         <span style="font-size:.8rem;color:var(--purple);font-weight:600">${invProvCount} linha(s) provisoria(s)</span>
         <button class="btn-validar" onclick="validarTodosInv()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar todos</button>
     </div>` : '';
@@ -1655,14 +2177,14 @@ function renderInvTable() {
                 <td><div style="font-size:.75rem;font-weight:600;color:var(--t2)">${fmtPct(Math.abs(pct))}</div>${progBar(pct, st)}</td>
                 <td class="text-right mono ${saldo < 0 ? 'c-red' : ''}">${fmt(saldo)}</td>
                 <td onclick="event.stopPropagation()"><div class="row-actions">
-                    ${l.provisorio ? `<button class="btn-validar" title="Validar" onclick="validarInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}
-                    <button title="Editar" onclick="showInvLinhaModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button class="danger" title="Excluir" onclick="deleteInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+                    ${l.provisorio && canValidate() ? `<button class="btn-validar" title="Validar" onclick="validarInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Validar</button>` : ''}
+                    ${canEdit(l) ? `<button title="Editar" onclick="showInvLinhaModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+                    ${canDelete(l) ? `<button class="danger" title="Excluir" onclick="deleteInvLinha('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>` : ''}
                 </div></td>
             </tr>
             <tr class="row-detail" data-inv-idx="${idx}"><td colspan="9">
                 <div class="inv-trans-area">
-                    <h4>Transacoes <button class="btn btn-sm btn-primary" onclick="showInvTransModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar</button></h4>
+                    <h4>Transacoes ${canCreate() ? `<button class="btn btn-sm btn-primary" onclick="showInvTransModal('${l.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Adicionar</button>` : ''}</h4>
                     ${trans.length ? `<table class="inv-trans-table"><tbody>
                         ${trans.map(t => `<tr${t.provisorio ? ' class="row-provisorio"' : ''}>
                             <td style="width:22%"><strong>${esc(t.descricao)}</strong>${t.provisorio ? ' <span class="badge badge-purple">Prov.</span>' : ''}</td>
@@ -1672,8 +2194,8 @@ function renderInvTable() {
                             <td style="width:15%">${esc(t.fornecedor || '')}</td>
                             <td style="width:12%">${t.notaFiscal ? 'NF: ' + esc(t.notaFiscal) : ''}</td>
                             <td style="width:5%" class="row-actions">
-                                ${t.provisorio ? `<button class="btn-validar" title="Validar" onclick="validarInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
-                                <button class="danger" title="Excluir" onclick="deleteInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
+                                ${t.provisorio && canValidate() ? `<button class="btn-validar" title="Validar" onclick="validarInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
+                                ${canDelete(t) ? `<button class="danger" title="Excluir" onclick="deleteInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>` : ''}
                             </td>
                         </tr>`).join('')}
                     </tbody></table>` : '<div style="font-size:.8rem;color:var(--t3);padding:8px 0">Nenhuma transacao registrada.</div>'}
@@ -1705,6 +2227,7 @@ function showInvLinhaModal(id) {
     if (id) {
         const l = invData.linhas.find(x => x.id === id);
         if (!l) return;
+        if (!canEdit(l)) { toast('Sem permissao para editar esta linha.', true); return; }
         document.getElementById('invLinhaModalTitle').textContent = 'Editar Linha de Investimento';
         document.getElementById('invLinhaId').value = l.id;
         document.getElementById('invLinhaNome').value = l.nome;
@@ -1789,6 +2312,8 @@ async function saveInvLinha() {
 }
 
 async function deleteInvLinha(id) {
+    const linha = invData.linhas.find(l => l.id === id);
+    if (!canDelete(linha)) { toast('Sem permissao para excluir esta linha.', true); return; }
     if (!confirm('Remover esta linha de investimento e todas as suas transacoes?')) return;
     showLoading();
     try {
@@ -1857,6 +2382,8 @@ async function saveInvTrans() {
 }
 
 async function deleteInvTrans(id) {
+    const trans = invData.transacoes.find(t => t.id === id);
+    if (!canDelete(trans)) { toast('Sem permissao para excluir esta transacao.', true); return; }
     if (!confirm('Remover esta transacao?')) return;
     showLoading();
     try {
@@ -1877,6 +2404,7 @@ function setSection(section) {
     activeSection = section;
     document.getElementById('budgetSection').style.display = section === 'budget' ? '' : 'none';
     document.getElementById('investSection').style.display = section === 'investimentos' ? '' : 'none';
+    document.getElementById('configSection').style.display = section === 'configuracoes' ? '' : 'none';
 
     document.querySelectorAll('.nav-item[data-tab]').forEach(t => {
         t.classList.toggle('active', section === 'budget' && t.dataset.tab === activeTab);
@@ -1886,6 +2414,7 @@ function setSection(section) {
     });
 
     if (section === 'investimentos') renderInvestimentos();
+    if (section === 'configuracoes') loadAndRenderConfig();
 }
 
 // ── Events ───────────────────────────────────────
@@ -1922,7 +2451,7 @@ document.getElementById('invTransModal').addEventListener('click', e => { if (e.
 document.getElementById('novoLancamentoModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideNovoLancamentoModal(); });
 
 // Upload
-function showUpload() { uploadBackToStep1(); document.getElementById('uploadModal').style.display = 'flex'; }
+function showUpload() { if (!canImportCSV()) { toast('Sem permissao para importar CSV.', true); return; } uploadBackToStep1(); document.getElementById('uploadModal').style.display = 'flex'; }
 function hideUpload() { pendingRows = []; document.getElementById('uploadModal').style.display = 'none'; uploadBackToStep1(); }
 document.getElementById('uploadModal').addEventListener('click', e => { if (e.target === e.currentTarget) hideUpload(); });
 document.getElementById('btnConfirmImport').addEventListener('click', confirmImport);
@@ -1936,6 +2465,7 @@ document.getElementById('fileInput').addEventListener('change', e => { if (e.tar
 
 // ── Validar provisorios ─────────────────────────
 async function validarEntry(id) {
+    if (!canValidate()) { toast('Sem permissao para validar lancamentos.', true); return; }
     showLoading();
     try {
         const { error } = await sb.from('orcamento_lancamentos').update({ provisorio: false }).eq('id', id);
@@ -1953,6 +2483,7 @@ async function validarEntry(id) {
 function editEntry(id) {
     const entry = allData.find(r => r.id === id);
     if (!entry) return;
+    if (!canEdit(entry)) { toast('Sem permissao para editar este lancamento.', true); return; }
     editingEntryId = id;
     nlResumoKey = `${entry.descricaoConta}||${entry.contaContabil}||${entry.mes}`;
     showNovoLancamentoModal({
@@ -1972,8 +2503,9 @@ function editEntry(id) {
 }
 
 async function deleteEntry(id) {
-    if (!confirm('Remover este lancamento?')) return;
     const entry = allData.find(r => r.id === id);
+    if (!canDelete(entry)) { toast('Sem permissao para excluir este lancamento.', true); return; }
+    if (!confirm('Remover este lancamento?')) return;
     const key = entry ? `${entry.descricaoConta}||${entry.contaContabil}||${entry.mes}` : null;
     showLoading();
     try {
@@ -1999,6 +2531,7 @@ async function deleteEntry(id) {
 }
 
 async function validarTodos() {
+    if (!canValidate()) { toast('Sem permissao para validar lancamentos.', true); return; }
     const provIds = getFiltered().filter(r => r.provisorio).map(r => r.id);
     if (!provIds.length) { toast('Nenhum lancamento provisorio.', true); return; }
     if (!confirm(`Validar ${provIds.length} lancamento(s) provisorio(s)?`)) return;
@@ -2018,6 +2551,7 @@ async function validarTodos() {
 
 // Actions
 async function clearAll() {
+    if (!canClearAll()) { toast('Sem permissao para limpar dados.', true); return; }
     const mesSel = document.getElementById('fMes').value;
     showLoading();
     try {
@@ -2045,6 +2579,7 @@ async function clearAll() {
 }
 
 function exportCSV() {
+    if (!canExportCSV()) { toast('Sem permissao para exportar dados.', true); return; }
     if (!allData.length) { toast('Nenhum dado para exportar.', true); return; }
     const h = ['M\u00CAS','Tipo','Respons\u00E1vel','Subgrupo OXR','Grupo OXR','Descri\u00E7\u00E3o Conta','Grupo Conta','Conta Cont\u00E1bil','Historico','Centro Custo','Nome C. Custo','DC','Or\u00E7ado','Real','Lote','Origem','Data'];
     const l = [h.join(';')];
@@ -2158,18 +2693,42 @@ async function saveNovoLancamento() {
             centro_custo: centroCusto, historico: titulo, lote, provisorio
         };
         let error;
+        let mergedExisting = false;
         if (editingEntryId) {
             ({ error } = await sb.from('orcamento_lancamentos').update(payload).eq('id', editingEntryId));
         } else {
-            payload.user_id = currentUser.id;
-            ({ error } = await sb.from('orcamento_lancamentos').insert(payload));
+            // Check if entry with same descricaoConta + contaContabil + mes + historico already exists
+            const existing = allData.find(r =>
+                r.descricaoConta === descricao &&
+                r.contaContabil === contaContabil &&
+                r.mes === mes &&
+                r.historico === titulo
+            );
+            if (existing) {
+                // Merge: update existing entry adding/replacing values
+                const mergePayload = {
+                    orcado: orcado || existing.orcado,
+                    real_valor: realVal || existing.real,
+                    responsavel: responsavel || existing.responsavel,
+                    grupo_oxr: grupoOXR || existing.grupoOXR,
+                    grupo_conta: grupoConta || existing.grupoConta,
+                    centro_custo: centroCusto || existing.centroCusto,
+                    lote: existing.lote,
+                    provisorio: provisorio
+                };
+                ({ error } = await sb.from('orcamento_lancamentos').update(mergePayload).eq('id', existing.id));
+                mergedExisting = true;
+            } else {
+                payload.user_id = currentUser.id;
+                ({ error } = await sb.from('orcamento_lancamentos').insert(payload));
+            }
         }
         if (error) { toast('Erro ao salvar: ' + error.message, true); hideLoading(); return; }
-        const savedKey = nlResumoKey;
+        const savedKey = nlResumoKey || `${descricao}||${contaContabil}||${mes}`;
         await loadStore();
         hideNovoLancamentoModal();
         render();
-        if (savedKey && activeTab === 'resumo') {
+        if (activeTab === 'resumo') {
             const el = document.getElementById('content');
             const idx = resumoItems.findIndex(i => `${i.descricaoConta}||${i.contaContabil}||${i.mes}` === savedKey);
             if (idx >= 0) {
@@ -2181,7 +2740,7 @@ async function saveNovoLancamento() {
         const wasEditing = !!editingEntryId;
         nlResumoKey = null;
         editingEntryId = null;
-        toast(wasEditing ? 'Lancamento atualizado' : 'Lancamento adicionado');
+        toast(wasEditing ? 'Lancamento atualizado' : mergedExisting ? 'Lancamento existente atualizado' : 'Lancamento adicionado');
     } catch (e) {
         toast('Erro: ' + e.message, true);
     } finally {
@@ -2191,6 +2750,7 @@ async function saveNovoLancamento() {
 
 // ── Validar provisorios investimento ────────────
 async function validarInvLinha(id) {
+    if (!canValidate()) { toast('Sem permissao para validar.', true); return; }
     showLoading();
     try {
         const { error } = await sb.from('investimento_linhas').update({ provisorio: false }).eq('id', id);
@@ -2206,6 +2766,7 @@ async function validarInvLinha(id) {
 }
 
 async function validarInvTrans(id) {
+    if (!canValidate()) { toast('Sem permissao para validar.', true); return; }
     showLoading();
     try {
         const { error } = await sb.from('investimento_transacoes').update({ provisorio: false }).eq('id', id);
@@ -2221,6 +2782,7 @@ async function validarInvTrans(id) {
 }
 
 async function validarTodosInv() {
+    if (!canValidate()) { toast('Sem permissao para validar.', true); return; }
     const provIds = getFilteredInv().filter(l => l.provisorio).map(l => l.id);
     if (!provIds.length) { toast('Nenhuma linha provisoria.', true); return; }
     if (!confirm(`Validar ${provIds.length} linha(s) provisoria(s)?`)) return;
