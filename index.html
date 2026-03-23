@@ -1585,14 +1585,19 @@ async function addUser() {
 
     showLoading();
     try {
-        // 1. Create auth user via Supabase Auth REST API (no session interference)
-        const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+        // 1. Create auth user via Supabase Admin API (service_role key, bypasses email confirmation)
+        if (!SUPABASE_SERVICE_ROLE_KEY) {
+            toast('SUPABASE_SERVICE_ROLE_KEY nao configurada no config.js', true);
+            return;
+        }
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'apikey': SUPABASE_ANON_KEY
+                'apikey': SUPABASE_SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
             },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ email, password, email_confirm: true })
         });
         const result = await res.json();
 
