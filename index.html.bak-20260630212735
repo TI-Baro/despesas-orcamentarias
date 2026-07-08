@@ -1152,7 +1152,7 @@ tr.row-provisorio:hover>td{background:#ede9fe}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0"></script>
-<script src="config.js?v=202606302130"></script>
+<script src="config.js"></script>
 <script>
 // ── Supabase Client ─────────────────────────────
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);

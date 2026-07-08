@@ -4,7 +4,7 @@ const SUPABASE_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3Mi
 
 // Emails autorizados a criar conta (lowercase)
 const ALLOWED_EMAILS = [
-  'mario.franco@quintadabaroneza.com.br',
   'cesar@quintadabaroneza.com.br',
-  'lucas.estevao@quintadabaroneza.com.br'
+  'lucas.estevao@quintadabaroneza.com.br',
+  'victor.gemelgo@quintadabaroneza.com.br'
 ];
