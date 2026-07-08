@@ -146,9 +146,11 @@ begin
   end if;
 
   -- Se nao existe nenhum admin ainda, o usuario vira admin automaticamente
+  -- (o acesso ja e controlado pelo Authentik, entao novos usuarios entram
+  -- direto com o menor privilegio em vez de ficarem pendentes de aprovacao)
   select exists(select 1 from user_profiles where perfil = 'administrador') into _has_admin;
   if _has_admin then
-    _role := 'pendente';
+    _role := 'operador_auxiliar';
   else
     _role := 'administrador';
   end if;

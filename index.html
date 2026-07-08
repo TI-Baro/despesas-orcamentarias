@@ -502,20 +502,6 @@ tr.row-provisorio:hover>td{background:#ede9fe}
   </div>
 </div>
 
-<!-- ── Pending Screen (aguardando aprovacao) ─────── -->
-<div class="pending-screen" id="pendingScreen">
-  <div class="pending-card">
-    <div class="pending-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    </div>
-    <h2>Aguardando aprovacao</h2>
-    <p>Sua conta foi criada com sucesso, mas ainda nao foi aprovada por um administrador. Aguarde a liberacao do acesso.</p>
-    <div class="pending-email" id="pendingEmail"></div>
-    <br>
-    <button class="btn-login secondary" onclick="handleLogout()" style="margin-top:12px">Sair</button>
-  </div>
-</div>
-
 <!-- ── App Layout (hidden until login) ───────────── -->
 <div class="layout" id="appLayout" style="display:none">
   <!-- Sidebar -->
@@ -1143,15 +1129,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
     if (session && session.user) {
         currentUser = session.user;
         currentUserProfile = await ensureUserProfile();
-        if (!currentUserProfile || currentUserProfile.perfil === 'pendente') {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appLayout').style.display = 'none';
-            document.getElementById('pendingScreen').style.display = 'flex';
-            document.getElementById('pendingEmail').textContent = currentUser.email;
-            return;
-        }
         document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('pendingScreen').style.display = 'none';
         document.getElementById('appLayout').style.display = 'flex';
         document.getElementById('userEmail').textContent = currentUser.email;
         applyPermissions();
@@ -1164,7 +1142,6 @@ sb.auth.onAuthStateChange(async (event, session) => {
         invData = { linhas: [], transacoes: [], categorias: [] };
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appLayout').style.display = 'none';
-        document.getElementById('pendingScreen').style.display = 'none';
         showLoginError('');
     }
 });
@@ -1466,7 +1443,7 @@ async function updateUserRole(profileId, newRole) {
 async function removeUserProfile(profileId) {
     const profile = allProfiles.find(p => p.id === profileId);
     const label = profile ? profile.email : profileId;
-    if (!confirm(`Remover perfil de "${label}"? O usuario voltara ao estado pendente no proximo login.`)) return;
+    if (!confirm(`Remover perfil de "${label}"? O usuario recebera um novo perfil operador_auxiliar no proximo login.`)) return;
     const { error } = await sb.from('user_profiles').delete().eq('id', profileId);
     if (error) { toast('Erro ao remover perfil: ' + error.message, true); return; }
     toast('Perfil removido com sucesso');
