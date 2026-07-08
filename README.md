@@ -31,18 +31,18 @@ const SUPABASE_URL = 'https://SEU-PROJETO.supabase.co';
 const SUPABASE_ANON_KEY = 'sua-anon-key-aqui';
 ```
 
-### 3. Configurar emails autorizados
+### 3. Configurar login via Authentik
 
-No mesmo `config.js`, defina quais emails podem criar conta:
+O login e feito exclusivamente via Authentik (OIDC). Quem pode acessar a aplicacao e controlado pelos grupos/politicas da Application no Authentik, nao mais por uma lista de emails no codigo.
 
-```js
-const ALLOWED_EMAILS = [
-  'usuario@empresa.com',
-  'outro@empresa.com',
-];
-```
-
-Somente emails nesta lista conseguirao se registrar. Deixe a lista vazia (`[]`) para permitir qualquer email.
+1. No Authentik, crie um **OAuth2/OpenID Provider** + uma **Application** vinculada a ele, com:
+   - Redirect URI: `https://SEU-PROJETO.supabase.co/auth/v1/callback`
+   - Scopes: `openid email profile`
+   - Vincule a Application ao grupo/politica de quem deve ter acesso
+2. No Supabase Dashboard, va em **Authentication > Sign In / Providers > Add provider > Auto-discovery (OIDC)** e configure:
+   - Identifier: `custom:authentik`
+   - Client ID / Client Secret / Issuer URL: dados obtidos no Authentik
+3. Opcional: desabilite "Enable email signups" em **Authentication > Sign In / Providers > Email** para impedir criacao de conta nativa do Supabase.
 
 ### 4. Build e deploy com Docker
 
@@ -112,7 +112,7 @@ O `config.js` e copiado para dentro da imagem Docker durante o build. Por isso, 
 
 ```
 ├── index.html          # Aplicacao completa (HTML + CSS + JS)
-├── config.js           # Credenciais Supabase e emails permitidos
+├── config.js           # Credenciais Supabase (URL e chave publica)
 ├── schema.sql          # SQL para criar tabelas no Supabase
 ├── Dockerfile          # Imagem Docker (nginx:alpine)
 ├── nginx.conf          # Configuracao do nginx
@@ -125,6 +125,6 @@ O `config.js` e copiado para dentro da imagem Docker durante o build. Por isso, 
 ## Seguranca
 
 - **RLS (Row Level Security)**: cada usuario so acessa seus proprios dados no Supabase
-- **Lista de emails**: restringe quem pode criar conta na aplicacao
+- **Login via Authentik (OIDC)**: quem pode acessar a aplicacao e controlado pelos grupos/politicas da Application no Authentik
 - **Headers HTTP**: nginx configurado com X-Frame-Options, X-Content-Type-Options e Referrer-Policy
 - O `config.js` contem a **anon key** do Supabase, que e uma chave publica (segura para expor no frontend). A protecao dos dados e feita pelo RLS no servidor
