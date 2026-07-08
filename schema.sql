@@ -137,11 +137,25 @@ as $$
 declare
   _profile user_profiles%rowtype;
   _email text;
+  _nome text;
   _role text;
   _has_admin boolean;
 begin
+  -- Email/nome vem do auth.users; se o email ainda nao foi sincronizado
+  -- pelo Supabase (ex.: identidade criada antes do provider retornar o
+  -- claim certo), cai pro que veio nos claims brutos do login OIDC.
+  select coalesce(u.email, u.raw_user_meta_data->>'email'),
+         coalesce(u.raw_user_meta_data->>'name', u.raw_user_meta_data->>'given_name')
+    into _email, _nome
+    from auth.users u where u.id = auth.uid();
+
   select * into _profile from user_profiles where user_id = auth.uid();
   if found then
+    update user_profiles
+      set email = coalesce(nullif(_email, ''), email),
+          nome = coalesce(nome, nullif(_nome, ''))
+      where user_id = auth.uid()
+      returning * into _profile;
     return row_to_json(_profile);
   end if;
 
@@ -155,10 +169,8 @@ begin
     _role := 'administrador';
   end if;
 
-  select email into _email from auth.users where id = auth.uid();
-
-  insert into user_profiles (user_id, email, perfil)
-  values (auth.uid(), _email, _role)
+  insert into user_profiles (user_id, email, nome, perfil)
+  values (auth.uid(), _email, _nome, _role)
   returning * into _profile;
 
   return row_to_json(_profile);
