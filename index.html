@@ -1068,7 +1068,7 @@ tr.row-provisorio:hover>td{background:#ede9fe}
 <div class="modal-overlay" id="invTransModal" style="display:none">
   <div class="modal modal-wide">
     <div class="modal-header">
-      <h2>Nova Transacao</h2>
+      <h2 id="invTransModalTitle">Nova Transacao</h2>
       <button class="modal-close" onclick="hideInvTransModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="modal-body">
@@ -1155,6 +1155,7 @@ let activeSection = 'budget';
 let editingLinhaId = null;
 let valuesHidden = false;
 let addingTransToLinhaId = null;
+let editingTransId = null;
 let nlResumoKey = null;
 let editingEntryId = null;
 
@@ -2136,8 +2137,9 @@ function renderInvTable() {
                             <td style="width:10%"><span class="badge ${t.tipo === 'estorno' ? 'badge-blue' : t.tipo === 'pagamento' ? 'badge-green' : 'badge-amber'}">${esc(t.tipo)}</span></td>
                             <td style="width:15%">${esc(t.fornecedor || '')}</td>
                             <td style="width:12%">${t.notaFiscal ? 'NF: ' + esc(t.notaFiscal) : ''}</td>
-                            <td style="width:5%" class="row-actions">
+                            <td style="width:9%" class="row-actions">
                                 ${t.provisorio && canValidate() ? `<button class="btn-validar" title="Validar" onclick="validarInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
+                                ${canEdit(t) ? `<button title="Editar" onclick="showInvTransModal('${l.id}','${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
                                 ${canDelete(t) ? `<button class="danger" title="Excluir" onclick="deleteInvTrans('${t.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>` : ''}
                             </td>
                         </tr>`).join('')}
@@ -2272,23 +2274,41 @@ async function deleteInvLinha(id) {
     }
 }
 
-function showInvTransModal(linhaId) {
+function showInvTransModal(linhaId, transId) {
     addingTransToLinhaId = linhaId;
+    editingTransId = transId || null;
     document.getElementById('invTransLinhaId').value = linhaId;
-    document.getElementById('invTransDesc').value = '';
-    document.getElementById('invTransValor').value = '';
-    document.getElementById('invTransData').value = new Date().toISOString().slice(0, 10);
-    document.getElementById('invTransTipo').value = 'despesa';
-    document.getElementById('invTransFornecedor').value = '';
-    document.getElementById('invTransNF').value = '';
-    document.getElementById('invTransObs').value = '';
-    document.getElementById('invTransProvisorio').checked = false;
+    if (transId) {
+        const t = invData.transacoes.find(x => x.id === transId);
+        if (!t) return;
+        if (!canEdit(t)) { toast('Sem permissao para editar esta transacao.', true); return; }
+        document.getElementById('invTransModalTitle').textContent = 'Editar Transacao';
+        document.getElementById('invTransDesc').value = t.descricao;
+        document.getElementById('invTransValor').value = String(t.valor).replace('.', ',');
+        document.getElementById('invTransData').value = t.data || '';
+        document.getElementById('invTransTipo').value = t.tipo;
+        document.getElementById('invTransFornecedor').value = t.fornecedor || '';
+        document.getElementById('invTransNF').value = t.notaFiscal || '';
+        document.getElementById('invTransObs').value = t.observacao || '';
+        document.getElementById('invTransProvisorio').checked = !!t.provisorio;
+    } else {
+        document.getElementById('invTransModalTitle').textContent = 'Nova Transacao';
+        document.getElementById('invTransDesc').value = '';
+        document.getElementById('invTransValor').value = '';
+        document.getElementById('invTransData').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('invTransTipo').value = 'despesa';
+        document.getElementById('invTransFornecedor').value = '';
+        document.getElementById('invTransNF').value = '';
+        document.getElementById('invTransObs').value = '';
+        document.getElementById('invTransProvisorio').checked = false;
+    }
     document.getElementById('invTransModal').style.display = 'flex';
 }
 
 function hideInvTransModal() {
     document.getElementById('invTransModal').style.display = 'none';
     addingTransToLinhaId = null;
+    editingTransId = null;
 }
 
 async function saveInvTrans() {
@@ -2308,13 +2328,21 @@ async function saveInvTrans() {
 
     showLoading();
     try {
-        const { error } = await sb.from('investimento_transacoes').insert({
-            user_id: currentUser.id, linha_id: linhaId, descricao, valor, data,
-            tipo, fornecedor, nota_fiscal: notaFiscal, observacao, provisorio
-        });
+        let error;
+        if (editingTransId) {
+            ({ error } = await sb.from('investimento_transacoes').update({
+                descricao, valor, data, tipo, fornecedor, nota_fiscal: notaFiscal, observacao, provisorio
+            }).eq('id', editingTransId));
+        } else {
+            ({ error } = await sb.from('investimento_transacoes').insert({
+                user_id: currentUser.id, linha_id: linhaId, descricao, valor, data,
+                tipo, fornecedor, nota_fiscal: notaFiscal, observacao, provisorio
+            }));
+        }
         if (error) { toast('Erro ao salvar: ' + error.message, true); hideLoading(); return; }
+        const wasEditing = !!editingTransId;
         await loadInvStore();
-        toast('Transacao adicionada');
+        toast(wasEditing ? 'Transacao atualizada' : 'Transacao adicionada');
         hideInvTransModal();
         renderInvestimentos();
     } catch (e) {
